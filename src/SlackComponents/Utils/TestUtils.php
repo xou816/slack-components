@@ -15,7 +15,8 @@ class TestUtils {
 			'response_url' => '',
 			'actions' => [],
 			'attachment_id' => -1,
-			'callback_id' => ''
+			'callback_id' => '',
+			'token' => 'default_token'
 		];
 	}
 

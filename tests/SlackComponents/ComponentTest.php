@@ -57,7 +57,7 @@ class ComponentTest extends TestCase {
 		]);
 	}
 
-	public function testComponentCarryState() {
+	public function testComponentsCarryState() {
 		$comp = new TestableComponent();
 		$comp->restoreState([
 			'callback_data' => ['stored_key' => true]

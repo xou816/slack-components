@@ -39,7 +39,8 @@ class ApiClient {
 			]));
 			$uri = Psr7\uri_for('https://slack.com/api/'.$final);
 			$body = Psr7\stream_for(http_build_query($args));
-			$req = new Psr7\Request('POST', $uri)
+			$req = new Psr7\Request('POST', $uri);
+			$req = $req
 				->withHeader('Content-Type', 'application/x-www-form-urlencoded')
                 ->withBody($body);
 			return json_decode($this->client->send($req)->getBody(), true);

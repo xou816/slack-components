@@ -1,6 +1,6 @@
 <?php
 
-namespace API\Infrastructure\Slack;
+namespace SlackComponents;
 
 
 class CallbackId {

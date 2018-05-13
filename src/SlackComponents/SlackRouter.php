@@ -92,9 +92,10 @@ class SlackRouter {
 	public function send(CompiledMessage $message) {
 		$uri = Psr7\uri_for($this->webhookFor($message->getChannel()));
 		$body = Psr7\stream_for(json_encode($message->getMessage()));
-		$req = new Psr7\Request('POST', $uri)
+		$req = new Psr7\Request('POST', $uri);
+		$req = $req
 			->withHeader('Content-Type', 'application/json')
-            ->withBody($body)));
+            ->withBody($body);
         $this->client->send($req);
 		return $this;
 	}
@@ -104,7 +105,8 @@ class SlackRouter {
 		if (!is_null($res)) {
 			$uri = Psr7\uri_for($payload['response_url']);
 			$body = Psr7\stream_for(json_encode($res->getMessage()));
-            $req = new Psr7\Request('POST', $uri)
+            $req = new Psr7\Request('POST', $uri);
+            $req = $req
             	->withHeader('Content-Type', 'application/json')
             	->withBody($body);
             $this->client->send($req);
