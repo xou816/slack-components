@@ -40,7 +40,7 @@ class MyMessage extends InterractiveMessage {
         parent::__construct($router);
         $this->myButton = new Button('myButton');
         $this->when($this->myButton->clicked(function(ButtonAction $action, $payload) {
-            return $this->patchState('count' => $payload['callback_data']['count'] + 1);
+            return $this->patchState(['count' => $payload['callback_data']['count'] + 1]);
         }), 'someChannel');   
     }
 

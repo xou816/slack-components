@@ -1,8 +1,8 @@
 <?php
 
-namespace API\Infrastructure\Slack;
+namespace SlackComponents;
 
-use API\Infrastructure\Slack\Components\AbstractComponent;
+use SlackComponents\Components\AbstractComponent;
 
 abstract class InterractiveMessage extends AbstractComponent {
 
