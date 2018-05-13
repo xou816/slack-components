@@ -10,23 +10,23 @@ use SlackComponents\InterractiveMessage;
 use SlackComponents\SlackRouter;
 use SlackComponents\Utils\TestUtils;
 
-class Implementation extends InterractiveMessage {
+class MyMessage extends InterractiveMessage {
 
     public function __construct(SlackRouter $router) {
         parent::__construct($router);
         $this->button = new Button('btn');
-        $this->when($this->button->clicked(function(ButtonAction $action, $payload) {
-            return $this->patchState(['count' => $payload['callback_data']['count'] + 1]);
+        $this->when($this->button->clicked(function(ButtonAction $action, $count) {
+            return $this->patchState(['count' => $count + 1]);
         }), 'some_channel');
     }
 
-    protected function buildMessage($state) {
+    protected function buildMessage($count) {
         return [
-            'text' => $state['count'],
+            'text' => $count,
             'attachments' => [
                 [
                     'callback_data' => [
-                        'count' => $state['count']
+                        'count' => $count
                     ],
                     'actions' => [
                         $this->button
@@ -60,7 +60,7 @@ class InterractiveMessageTest extends TestCase {
 
 	public function testMessagesRegisterHandlers() {
 		$router = $this->createSimpleRouter();
-		$msg = new Implementation($router);
+		$msg = new MyMessage($router);
 		$compiled = $msg->build('some_channel', ['count' => 0]);
 		$this->assertEquals(0, $compiled->getMessage()['text']);
 		$payload = TestUtils::getPayload($compiled->getMessage(), 'btn', 'btn');

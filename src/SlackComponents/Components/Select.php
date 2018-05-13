@@ -8,9 +8,11 @@ class Select {
     private $text;
     private $style = Style::DEF;
     private $options = [];
+    private $builder;
 
     public function __construct($name) {
         $this->name = $name;
+        $this->builder = ReflectionHandler::createSimple($name, SelectAction::class);
     }
 
     public function build() {
@@ -39,19 +41,6 @@ class Select {
     }
 
     public function selected(\Closure $handler) {
-        return function($payload) use ($handler) {
-            $actionToHandle = null;
-            foreach ($payload['actions'] as $action) {
-                if ($action['name'] === $this->name) {
-                    $actionToHandle = new SelectAction($action);
-                    break;
-                }
-            }
-            if (!is_null($actionToHandle)) {
-                return $handler($actionToHandle, $payload);
-            } else {
-                return null;
-            }
-        };
+        return $this->builder->build($handler);
     }
 }

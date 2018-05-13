@@ -52,7 +52,18 @@ abstract class InterractiveMessage extends AbstractComponent {
 	protected abstract function buildMessage($state);
 
 	protected function buildTree($state) {
-        return $this->buildMessage($state);
+		$ref = new \ReflectionMethod($this, 'buildMessage');
+		$params = $ref->getParameters();
+		$l = count($params);
+		$params = array_map(function(\ReflectionParameter $param) use ($state, $l) {
+			$name = $param->getName();
+			if (isset($state[$name])) {
+				return $state[$name];
+			} else if ($l === 1) {
+				return $state;
+			}
+		}, $ref->getParameters()); 
+		return call_user_func_array([$this, 'buildMessage'], $params);
     }
 
     protected function defaultState() {

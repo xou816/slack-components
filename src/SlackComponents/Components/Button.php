@@ -9,10 +9,12 @@ class Button {
     private $text;
     private $style = Style::DEF;
     private $confirm = null;
+    private $builder;
 
     public function __construct($name, $value = null) {
         $this->name = $name;
         $this->value = is_null($value) ? $name : $value;
+        $this->builder = ReflectionHandler::createSimple($name, ButtonAction::class);
     }
 
     public function withStyle($style) {
@@ -50,19 +52,6 @@ class Button {
     }
 
     public function clicked(\Closure $handler) {
-        return function($payload) use ($handler) {
-            $actionToHandle = null;
-            foreach ($payload['actions'] as $action) {
-                if ($action['name'] === $this->name) {
-                    $actionToHandle = new ButtonAction($action);
-                    break;
-                }
-            }
-            if (!is_null($actionToHandle)) {
-                return $handler($actionToHandle, $payload);
-            } else {
-                return null;
-            }
-        };
+        return $this->builder->build($handler);
     }
 }
