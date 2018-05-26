@@ -2,7 +2,7 @@
 
 namespace SlackComponents\Components;
 
-class SelectAction implements SlackAction {
+class SelectAction implements SlackInteraction {
 
 	private $selected_options;
 	private $name;
@@ -20,6 +20,10 @@ class SelectAction implements SlackAction {
 
 	public function getRaw() {
 		return $this->raw;
+	}
+
+	public function getType() {
+		return SlackInteraction::MESSAGE;
 	}
 
 	public function getSelectedOptions() {

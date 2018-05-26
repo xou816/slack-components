@@ -5,29 +5,29 @@ use GuzzleHttp\Client;
 
 use SlackComponents\SlackRouter;
 use SlackComponents\SlackRouterException;
-use SlackComponents\CompiledMessage;
+use SlackComponents\CompiledResource;
+use SlackComponents\Utils\ApiClient;
 
 class SlackRouterTest extends TestCase {
 
 	private function createSimpleRouter() {
-		return Test::createSimpleRouter($this->createMock(Client::class));
+		return Test::createSimpleRouter($this->createMock(Client::class), $this->createMock(ApiClient::class));
 	}
 
 	public function testHandlersCanBeRegistered() {
 		$router = $this->createSimpleRouter();
 		$message = Test::createSimpleMessage();
 		$router->now('some_channel', Test::respondWith($message));
-		$compiled = CompiledMessage::compile('some_channel', $message);
+		$compiled = CompiledResource::compileMessage(null, $message);
 		$resp = $router->handleNow(Test::triggerChannel('some_channel'), false);
-		$this->assertEquals($compiled->getMessage(), $resp->getMessage());
-		$this->assertEquals($compiled->getChannel(), $resp->getChannel());
+		$this->assertEquals($compiled->getResource(), $resp->getResource());
 	}
 
 	public function testThereIsADefaultHandler() {
 		$router = $this->createSimpleRouter();
 		$resp = $router->handleNow(null, false);
 		$this->assertTrue(!is_null($resp));
-		$this->assertEquals($resp->getMessage()['response_type'], 'ephemeral');
+		$this->assertEquals($resp->getResource()['response_type'], 'ephemeral');
 	}
 
 	public function testFirstNonNullHandlerIsUsed() {
@@ -40,7 +40,7 @@ class SlackRouterTest extends TestCase {
 			->now('some_channel', Test::respondWith($two))
 			->now('some_channel', Test::respondWith($three));
 		$resp = $router->handleNow(Test::triggerChannel('some_channel'), false);
-		$this->assertEquals('Message #2', $resp->getMessage()['text']);
+		$this->assertEquals('Message #2', $resp->getResource()['text']);
 	}
 
 	public function testTokenIsVerified() {
@@ -57,7 +57,7 @@ class SlackRouterTest extends TestCase {
 			->now('channel_a', Test::respondWith($channel_a))
 			->now('channel_b', Test::respondWith($channel_b));
 		$resp = $router->handleNow(Test::triggerChannel('channel_a'), false);
-		$this->assertEquals('Message for channel_a', $resp->getMessage()['text']);
+		$this->assertEquals('Message for channel_a', $resp->getResource()['text']);
 	}
 
 }

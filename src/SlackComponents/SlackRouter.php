@@ -4,15 +4,18 @@ namespace SlackComponents;
 
 use GuzzleHttp\Client;
 use GuzzleHttp\Psr7;
+use SlackComponents\Utils\ApiClient;
 
 class SlackRouter {
 
 	private $client;
+	private $api;
 	private $options;
 	private $handlers = ['now' => [], 'later' => []];
 
-    public function __construct(Client $client, $options) {
+    public function __construct(Client $client, ApiClient $api, $options) {
 		$this->client = $client;
+		$this->api = $api;
 		$this->options = $options;
 	}
 
@@ -25,10 +28,10 @@ class SlackRouter {
             try {
 			    $channel = $res['channel'];
 				return isset($this->handlers[$when][$channel]) ?
-					CompiledMessage::compile($channel, $this->handlers[$when][$channel]($payload)) :
+					$this->handlers[$when][$channel]($payload) :
 					null;
 			} catch (\Exception $e) {
-				return CompiledMessage::just([
+				return CompiledResource::just([
                     'response_type' => 'ephemeral',
                     'replace_original' => false,
                     'text' => $e->getMessage().' ('.$e->getFile().':'.$e->getLine().')'
@@ -38,15 +41,15 @@ class SlackRouter {
 	}
 
 	public function handleNow($payload, $safe = true) {
-		$resp = $this->handle('now', $payload, $safe);
-		if (is_null($resp)) {
-			return CompiledMessage::just([
+		$res = $this->handle('now', $payload, $safe);
+		if (is_null($res)) {
+			return CompiledResource::just([
 				'response_type' => 'ephemeral',
 				'replace_original' => false,
 				'text' => 'Please wait...'
 			]);
 		} else {
-			return $resp;
+			return $res;
 		}
 	}
 
@@ -89,27 +92,39 @@ class SlackRouter {
 		}
 	}
 
-	public function send(CompiledMessage $message) {
-		$uri = Psr7\uri_for($this->webhookFor($message->getChannel()));
-		$body = Psr7\stream_for(json_encode($message->getMessage()));
-		$req = new Psr7\Request('POST', $uri);
+	private function sendJson($uri, $body) {
+		$body = Psr7\stream_for(json_encode($body));
+		$req = new Psr7\Request('POST', Psr7\uri_for($uri));
 		$req = $req
 			->withHeader('Content-Type', 'application/json')
-            ->withBody($body);
-        $this->client->send($req);
-		return $this;
+	        ->withBody($body);
+	    $this->client->send($req);
+	}
+
+	public function send(CompiledResource $resource) {
+		$transport = $resource->getTransport();
+		if ($transport['type'] === 'trigger') {
+			$this->api->dialogOpen([
+				'trigger_id' => $transport['value'],
+				'dialog' => $resource->getResource()
+			]);
+			return $this;
+		} else if ($transport['type'] === 'webhook') {		
+			$uri = $this->webhookFor($transport['value']);
+			$this->sendJson($uri, $resource->getResource());
+			return $this;
+		} else if ($transport['type'] === 'response_url') {
+			$uri = $transport['value'];
+			$this->sendJson($uri, $resource->getResource());
+		} else {
+			throw new SlackRouterException('Cannot send resource of type '.$transport['type']);
+		}
 	}
 
 	public function handleAndRespond($payload) {
 		$res = $this->handleLater($payload);
 		if (!is_null($res)) {
-			$uri = Psr7\uri_for($payload['response_url']);
-			$body = Psr7\stream_for(json_encode($res->getMessage()));
-            $req = new Psr7\Request('POST', $uri);
-            $req = $req
-            	->withHeader('Content-Type', 'application/json')
-            	->withBody($body);
-            $this->client->send($req);
+			$this->send($res);
         }
 	}
 }

@@ -2,14 +2,16 @@
 
 use GuzzleHttp\Client; 
 use SlackComponents\CallbackId;
-use SlackComponents\SlackRouter;
+use SlackComponents\Utils\ApiClient;
 use SlackComponents\Utils\TestUtils;
+use SlackComponents\SlackRouter;
+use SlackComponents\CompiledResource;
 
 class Test {
 
-	public static function createSimpleRouter(Client $client) {
+	public static function createSimpleRouter(Client $client, ApiClient $api) {
 		$options = ['token' => 'slack_token'];
-		return new SlackRouter($client, $options);
+		return new SlackRouter($client, $api, $options);
 	}
 
 	public static function createSimpleMessage($text = 'Hello world') {
@@ -32,7 +34,7 @@ class Test {
 
 	public static function respondWith($message) {
 		return function($payload) use ($message) {
-			return $message;
+			return is_null($message) ? null : CompiledResource::compileResponse(null, null, $message);
 		};
 	}
 

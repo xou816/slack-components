@@ -16,7 +16,7 @@ class ApiClient {
 	}
 
 	private static function apiList() {
-		$list = ["api", "apps.permissions", "auth", "bots", "channels", "chat", "dnd", "emoji", "files.comments", "files", "groups", "im", "mpim", "oauth", "pins", "reactions", "reminders", "rtm", "search", "stars", "team", "team.profile", "usergroups", "usergroups.users", "users", "users.profile", "users.admin"];
+		$list = ["api", "apps.permissions", "apps.permissions.resources", "apps.permissions.scopes", "auth", "bots", "channels", "chat", "conversations", "dialog", "dnd", "emoji", "files.comments", "files", "groups", "im", "migration", "mpim", "oauth", "pins", "reactions", "reminders", "rtm", "search", "stars", "team", "team.profile", "usergroups", "usergroups.users", "users", "users.profile"];
 		usort($list, function($a, $b) {
 			return strlen($b) - strlen($a);
 		});

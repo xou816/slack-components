@@ -14,6 +14,7 @@ class TestUtils {
 			'original_message' => $message,
 			'response_url' => '',
 			'actions' => [],
+			'type' => 'interactive_message',
 			'attachment_id' => -1,
 			'callback_id' => '',
 			'token' => 'default_token'

@@ -2,7 +2,7 @@
 
 namespace SlackComponents\Components;
 
-class ButtonAction implements SlackAction {
+class ButtonAction implements SlackInteraction {
 
 	private $value;
 	private $name;
@@ -16,6 +16,10 @@ class ButtonAction implements SlackAction {
 
 	public function getRaw() {
 		return $this->raw;
+	}
+
+	public function getType() {
+		return SlackInteraction::MESSAGE;
 	}
 
 	public function getValue() {

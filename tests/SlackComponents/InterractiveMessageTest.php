@@ -9,13 +9,14 @@ use SlackComponents\Components\Style;
 use SlackComponents\InterractiveMessage;
 use SlackComponents\SlackRouter;
 use SlackComponents\Utils\TestUtils;
+use SlackComponents\Utils\ApiClient;
 
 class MyMessage extends InterractiveMessage {
 
     public function __construct(SlackRouter $router) {
         parent::__construct($router);
         $this->button = new Button('btn');
-        $this->when($this->button->clicked(function(ButtonAction $action, $count) {
+        $this->when($this->button->clicked(function($count) {
             return $this->patchState(['count' => $count + 1]);
         }), 'some_channel');
     }
@@ -42,7 +43,7 @@ class MyMessage extends InterractiveMessage {
 class InterractiveMessageTest extends TestCase {
 
 	private function createSimpleRouter() {
-		return Test::createSimpleRouter($this->createMock(Client::class));
+		return Test::createSimpleRouter($this->createMock(Client::class), $this->createMock(ApiClient::class));
 	}
 
 	public function testButtonsCanBeCreatedFluently() {
@@ -62,9 +63,9 @@ class InterractiveMessageTest extends TestCase {
 		$router = $this->createSimpleRouter();
 		$msg = new MyMessage($router);
 		$compiled = $msg->build('some_channel', ['count' => 0]);
-		$this->assertEquals(0, $compiled->getMessage()['text']);
-		$payload = TestUtils::getPayload($compiled->getMessage(), 'btn', 'btn');
+		$this->assertEquals(0, $compiled->getResource()['text']);
+		$payload = TestUtils::getPayload($compiled->getResource(), 'btn', 'btn');
 		$resp = $router->handleNow($payload, false);
-		$this->assertEquals(1, $resp->getMessage()['text']);
+		$this->assertEquals(1, $resp->getResource()['text']);
 	}
 }

@@ -3,6 +3,7 @@
 namespace SlackComponents;
 
 use SlackComponents\Components\AbstractComponent;
+use SlackComponents\CompiledResource;
 
 abstract class InterractiveMessage extends AbstractComponent {
 
@@ -22,11 +23,11 @@ abstract class InterractiveMessage extends AbstractComponent {
 
 	public function build($channel, $data) {
 	    $res = $this->patchState($data);
-	    return CompiledMessage::compile($channel, $res);
+	    return CompiledResource::compileMessage($channel, $res);
 	}
 
-	public function send(CompiledMessage $message) {
-	    return $this->router->send($message);
+	public function send(CompiledResource $res) {
+	    return $this->router->send($res);
     }
 
     public function buildAndSend($channel, $args = null) {
@@ -34,17 +35,17 @@ abstract class InterractiveMessage extends AbstractComponent {
     }
 
 	protected function when(\Closure $handler, $channel) {
-	    $this->router->now($channel, function($payload) use ($handler) {
+	    $this->router->now($channel, function($payload) use ($handler, $channel) {
 	        $this->restoreState($payload['original_message'], $payload['callback_data']);
-	        return $handler($payload);
+	        return CompiledResource::compileResponse($channel, $payload['response_url'], $handler($payload));
         });
 	    return $this;
     }
 
     protected function after(\Closure $handler, $channel) {
-        $this->router->later($channel, function($payload) use ($handler) {
+        $this->router->later($channel, function($payload) use ($handler, $channel) {
             $this->restoreState($payload['original_message'], $payload['callback_data']);
-            return $handler($payload);
+            return CompiledResource::compileResponse($channel, $payload['response_url'], $handler($payload));
         });
         return $this;
     }
