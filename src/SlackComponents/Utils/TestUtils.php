@@ -17,7 +17,8 @@ class TestUtils {
 			'type' => 'interactive_message',
 			'attachment_id' => -1,
 			'callback_id' => '',
-			'token' => 'default_token'
+			'token' => 'default_token',
+			'trigger_id' => 'trigger_id'
 		];
 	}
 

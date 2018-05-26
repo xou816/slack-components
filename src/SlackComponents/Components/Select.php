@@ -2,7 +2,7 @@
 
 namespace SlackComponents\Components;
 
-class Select {
+class Select extends StaticComponent {
 
     private $name;
     private $text;

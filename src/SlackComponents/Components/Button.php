@@ -2,7 +2,7 @@
 
 namespace SlackComponents\Components;
 
-class Button {
+class Button extends StaticComponent {
 
     private $value;
     private $name;

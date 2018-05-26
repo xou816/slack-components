@@ -37,7 +37,9 @@ abstract class InterractiveMessage extends AbstractComponent {
 	protected function when(\Closure $handler, $channel) {
 	    $this->router->now($channel, function($payload) use ($handler, $channel) {
 	        $this->restoreState($payload['original_message'], $payload['callback_data']);
-	        return CompiledResource::compileResponse($channel, $payload['response_url'], $handler($payload));
+	        $resp = $handler($payload);
+	        return is_a($resp, CompiledResource::class) ? $resp :
+	        	CompiledResource::compileResponse($channel, $payload['response_url'], $handler($payload));
         });
 	    return $this;
     }
@@ -45,7 +47,9 @@ abstract class InterractiveMessage extends AbstractComponent {
     protected function after(\Closure $handler, $channel) {
         $this->router->later($channel, function($payload) use ($handler, $channel) {
             $this->restoreState($payload['original_message'], $payload['callback_data']);
-            return CompiledResource::compileResponse($channel, $payload['response_url'], $handler($payload));
+            $resp = $handler($payload);
+            return is_a($resp, CompiledResource::class) ? $resp :
+            	CompiledResource::compileResponse($channel, $payload['response_url'], $handler($payload));
         });
         return $this;
     }

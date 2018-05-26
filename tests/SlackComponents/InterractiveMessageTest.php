@@ -32,7 +32,6 @@ class MyMessage extends InterractiveMessage {
                     'actions' => [
                         $this->button
                             ->withLabel('Increment')
-                            ->build()
                     ]
                 ]
             ]
