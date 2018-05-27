@@ -14,6 +14,10 @@ class TextInput extends StaticComponent {
         $this->value = is_null($label) ? $name : $label;
     }
 
+    public function getName() {
+        return $this->name;
+    }
+
     public function withLabel($label) {
         $this->label = $label;
         return $this;

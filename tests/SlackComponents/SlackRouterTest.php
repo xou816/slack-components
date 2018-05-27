@@ -1,7 +1,9 @@
 <?php
 
 use PHPUnit\Framework\TestCase;
-use GuzzleHttp\Client; 
+use Prophecy\Argument;
+use GuzzleHttp\Client;
+use Psr\Http\Message\RequestInterface; 
 
 use SlackComponents\SlackRouter;
 use SlackComponents\SlackRouterException;
@@ -58,6 +60,27 @@ class SlackRouterTest extends TestCase {
 			->now('channel_b', Test::respondWith($channel_b));
 		$resp = $router->handleNow(Test::triggerChannel('channel_a'), false);
 		$this->assertEquals('Message for channel_a', $resp->getResource()['text']);
+	}
+
+	public function testRouterCanSendDialogs() {
+		$client = $this->prophesize(Client::class);
+		$client->send(Argument::any())->willReturn(new GuzzleHttp\Psr7\Response());
+		$router = Test::createSimpleRouter(
+			$client->reveal(), 
+			new ApiClient($client->reveal(), ['app_token' => 'app_token']));;
+		$router->send(CompiledResource::compileDialog('channel', 'trigger', ['key' => 'value']));
+		$client->send(Argument::that(function(RequestInterface $req) {
+			$body = [];
+			mb_parse_str($req->getBody(), $body);
+			$dialog = json_decode($body['dialog'], true);
+			return $req->getHeaderLine('Content-Type') === 'application/x-www-form-urlencoded'
+				&& $req->getMethod() === 'POST'
+				&& isset($body['trigger_id'])
+				&& isset($body['token'])
+				&& isset($dialog['callback_id'])
+				&& $req->getUri()->getHost() === 'slack.com'
+				&& $req->getUri()->getPath() === '/api/dialog.open';
+		}))->shouldHaveBeenCalled();
 	}
 
 }

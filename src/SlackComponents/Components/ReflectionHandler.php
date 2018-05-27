@@ -21,14 +21,19 @@ abstract class ReflectionHandler {
 				return null;
 			} else {	
 	            $params = array_map(function(\ReflectionParameter $param) use ($payload, $interaction) {
-					if ($param->getName() === 'payload') {
+	            	$clazz = $param->getClass();
+	            	$name = $param->getName();
+					if ($name === 'payload') {
 						return $payload;
-					} else if (isset($payload['callback_data'][$param->getName()])) {
-						return $payload['callback_data'][$param->getName()];
-					} else if ($param->getClass()->isSubclassOf(SlackInteraction::class)) {
+					} else if (isset($payload['callback_data'][$name])) {
+						return $payload['callback_data'][$name];
+					} else if (!is_null($clazz) && $clazz->isSubclassOf(SlackInteraction::class)) {
 						return $interaction;
-					} else if ($param->getClass()->isSubclassOf(SlackUser::class)) {
-						throw new Exception('Not implemented');
+					} else if (!is_null($clazz) && $clazz->isSubclassOf(SlackUser::class)) {
+						$user = new SlackUser();
+						return $user
+							->setId($payload['user']['id'])
+							->setUsername($payload['user']['name']);
 					} else {
 						return null;
 					}

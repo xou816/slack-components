@@ -25,6 +25,10 @@ class Select extends StaticComponent {
         ];
     }
 
+    public function getName() {
+        return $this->name;
+    }
+
     public function withLabel($text) {
         $this->text = $text;
         return $this;

@@ -13,6 +13,14 @@ class TestableComponent extends AbstractComponent {
 		$this->children = $children;
 	}
 
+	public function someMethod() {
+		return 'someMethod result';
+	}
+
+	protected function getContext() {
+		return $this;
+	}
+
     protected function isInterestedIn($patch) {
     	return false;
     }
@@ -80,6 +88,16 @@ class ComponentTest extends TestCase {
 		$this->assertEquals($comp->getRendered(), ['example' => 'somethingElse', 'updated' => true]);
 		$comp->patchState(['stableKey' => 'whatever']);
 		$this->assertEquals($comp->getRendered(), ['example' => 'wontRender', 'updated' => true]);
+	}
+
+	public function testClosuresAreBoundToRootContext() {
+		$comp = new TestableComponent([
+			'example' => function($key) {
+				return $this->someMethod();
+			},
+		]);
+		$comp->patchState(['key' => 'whatever']);
+		$this->assertEquals('someMethod result', $comp->getRendered()['example']);
 	}
 
 }

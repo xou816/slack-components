@@ -2,29 +2,47 @@
 
 namespace SlackComponents\Utils;
 
+use SlackComponents\Components\SlackInteraction;
+
 class TestUtils {
 
-	public static function defaultPayload($message) {
+	const USER = ['id' => 'ABC123', 'name' => 'user'];
+	const CHANNEL = ['id' => 'EDF456', 'name' => 'channel'];
+	const TEAM = ['id' => 'GHI789', 'domain' => 'domain'];
+
+	public static function defaultPayload() {
 		return [
-			'user' => ['id' => 'ABC123', 'name' => 'user'],
-			'channel' => ['id' => 'EDF456', 'name' => 'channel'],
-			'team' => ['id' => 'GHI789', 'domain' => 'domain'],
+			'user' => TestUtils::USER,
+			'channel' => TestUtils::CHANNEL,
+			'team' => TestUtils::TEAM,
 			'action_ts' => strval(microtime(true) + 10),
-			'message_ts' => strval(microtime(true)),
-			'original_message' => $message,
 			'response_url' => '',
 			'actions' => [],
-			'type' => 'interactive_message',
-			'attachment_id' => -1,
 			'callback_id' => '',
 			'token' => 'default_token',
 			'trigger_id' => 'trigger_id'
 		];
 	}
 
+	public static function interractiveMessagePayload($message) {
+		return array_replace(self::defaultPayload(), [
+			'type' => SlackInteraction::MESSAGE,
+			'original_message' => $message,
+			'message_ts' => strval(microtime(true))
+		]);
+	}
+
+	public static function getDialogSubmission($dialog, $values = []) {
+		return array_replace(self::defaultPayload(), [
+			'type' => SlackInteraction::DIALOG,
+			'submission' => $values,
+			'callback_id' => $dialog['callback_id']
+		]);
+	}
+
 	public static function getPayload($message, $name = null, $value = null) {
 
-		$res = self::defaultPayload($message);
+		$res = self::interractiveMessagePayload($message);
 
 		foreach ($message['attachments'] as $i => $attach) {
 

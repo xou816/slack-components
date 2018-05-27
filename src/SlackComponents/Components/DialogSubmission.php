@@ -2,7 +2,7 @@
 
 namespace SlackComponents\Components;
 
-class DialogSubmission extends SlackInteraction {
+class DialogSubmission implements SlackInteraction {
     
 	private $raw;
 
@@ -16,5 +16,21 @@ class DialogSubmission extends SlackInteraction {
 
     public function getType() {
     	return SlackInteraction::DIALOG;
+    }
+
+    public function __get ($key) {
+        return $this->raw[$key];
+    }
+
+    public function __set($key,$value) {
+        $this->raw[$key] = $value;
+    }
+
+    public function __isset ($key) {
+        return isset($this->raw[$key]);
+    }
+
+    public function __unset($key) {
+        unset($this->raw[$key]);
     }
 }

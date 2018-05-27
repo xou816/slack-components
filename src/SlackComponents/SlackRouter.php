@@ -103,17 +103,17 @@ class SlackRouter {
 
 	public function send(CompiledResource $resource) {
 		$transport = $resource->getTransport();
-		if ($transport['type'] === 'trigger') {
+		if ($transport['type'] === ResourceTransport::TRIGGER) {
 			$this->api->dialogOpen([
 				'trigger_id' => $transport['value'],
-				'dialog' => $resource->getResource()
+				'dialog' => json_encode($resource->getResource())
 			]);
 			return $this;
-		} else if ($transport['type'] === 'webhook') {		
+		} else if ($transport['type'] === ResourceTransport::WEBHOOK) {		
 			$uri = $this->webhookFor($transport['value']);
 			$this->sendJson($uri, $resource->getResource());
 			return $this;
-		} else if ($transport['type'] === 'response_url') {
+		} else if ($transport['type'] === ResourceTransport::RESPONSE_URL) {
 			$uri = $transport['value'];
 			$this->sendJson($uri, $resource->getResource());
 		} else {

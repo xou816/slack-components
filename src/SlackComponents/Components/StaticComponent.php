@@ -11,7 +11,7 @@ abstract class StaticComponent extends AbstractComponent {
     }
 
     protected function isInterestedIn($patch) {
-        return true;
+        return false;
     }
 
     protected function defaultState() {

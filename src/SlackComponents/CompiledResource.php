@@ -35,7 +35,7 @@ class CompiledResource {
         }
         list($id, $message) = self::computeCallbackIds($channel, $message);
         return new CompiledResource($id, [
-            'type' => 'webhook',
+            'type' => ResourceTransport::WEBHOOK,
             'value' => $channel
         ], $message);
     }
@@ -46,7 +46,7 @@ class CompiledResource {
         }
         list($id, $message) = self::computeCallbackIds($channel, $message);
         return new CompiledResource($id, [
-            'type' => 'response_url',
+            'type' => ResourceTransport::RESPONSE_URL,
             'value' => $responseUrl
         ], $message);
     }
@@ -64,7 +64,7 @@ class CompiledResource {
             $dialog['callback_id'] = $id;
         }
         return new CompiledResource($id, [
-            'type' => 'trigger',
+            'type' => ResourceTransport::TRIGGER,
             'value' => $trigger
         ], $dialog);
     }

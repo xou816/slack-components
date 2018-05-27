@@ -16,6 +16,8 @@ Through [Composer](https://packagist.org/packages/xou816/slack-components): `com
 How to use
 ----------
 
+TODO
+
 Example
 -------
 
@@ -24,8 +26,8 @@ A basic message:
 ```php
 class MyMessage extends InterractiveMessage {
 
-    protected function buildMessage($state) {
-        return ['text' => $state['truc']];
+    protected function buildMessage($text) {
+        return ['text' => $text];
     }
 
 }
@@ -39,23 +41,22 @@ class MyMessage extends InterractiveMessage {
     public function __construct(SlackRouter $router) {
         parent::__construct($router);
         $this->myButton = new Button('myButton');
-        $this->when($this->myButton->clicked(function(ButtonAction $action, $payload) {
-            return $this->patchState(['count' => $payload['callback_data']['count'] + 1]);
+        $this->when($this->myButton->clicked(function($count) {
+            return $this->patchState(['count' => $count + 1]);
         }), 'someChannel');   
     }
 
-    protected function buildMessage($state) {
+    protected function buildMessage($count) {
         return [
-            'text' => $state['count'],
+            'text' => $count,
             'attachments' => [
                 [
                     'callback_data' => [
-                        'count' => $state['count']
+                        'count' => $count
                     ],
                     'actions' => [
                         $this->myButton
                             ->withLabel('Increment')
-                            ->build()
                     ]
                 ]
             ]
@@ -72,9 +73,8 @@ class MyMessage extends InterractiveMessage {
     public function __construct(SlackRouter $router) {
         parent::__construct($router);
         $this->myButton = new Button('myButton');
-        $this->when($this->myButton->clicked(function(ButtonAction $action, $payload) {
-            $reverse = $payload['callback_data']['reverse'];
-            $patch = ['count' => $payload['callback_data']['count'] + ($reverse ? -1 : 1)];
+        $this->when($this->myButton->clicked(function($count, $reverse) {
+            $patch = ['count' => $count + ($reverse ? -1 : 1)];
             if (abs($patch['count']) === 10) {
                 $patch['reverse'] = !$reverse;
             }
@@ -86,20 +86,19 @@ class MyMessage extends InterractiveMessage {
         return ['reverse' => false, 'count' => 0];
     }
 
-    protected function buildMessage($state) {
+    protected function buildMessage($count, $reverse) {
         return [
-            'text' => $state['count'],
+            'text' => $count,
             'attachments' => [
                 [
                     'callback_data' => [
-                        'count' => $state['count'],
-                        'reverse' => $state['reverse']
+                        'count' => $count,
+                        'reverse' => $reverse
                     ],
                     'actions' => function($reverse) {
                         return [
                             $this->myButton
                                 ->withLabel($reverse ? 'Decrement' : 'Increment')
-                                ->build()
                         ];
                     }
                 ]

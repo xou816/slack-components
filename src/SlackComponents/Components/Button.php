@@ -17,6 +17,10 @@ class Button extends StaticComponent {
         $this->builder = ReflectionHandler::createSimple($name, ButtonAction::class);
     }
 
+    public function getName() {
+        return $this->name;
+    }
+
     public function withStyle($style) {
         $this->style = $style;
         return $this;

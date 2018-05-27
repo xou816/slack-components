@@ -41,6 +41,16 @@ class Dialog extends AbstractComponent {
         return $this;
     }
 
+    public function getKeys() {
+        return array_filter(array_map(function($component) {
+            if (is_a($component, StaticComponent::class)) {
+                return $component->getName();
+            } else {
+                return null;
+            }
+        }, $this->elements->buildTree([])));
+    }
+
     protected function buildTree($state) {
         return [
             'title' => $this->title,
