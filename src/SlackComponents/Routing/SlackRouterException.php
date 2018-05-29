@@ -1,5 +1,5 @@
 <?php
 
-namespace SlackComponents;
+namespace SlackComponents\Routing;
 
 class SlackRouterException extends \RuntimeException {}

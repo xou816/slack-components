@@ -1,6 +1,8 @@
 <?php
 
-namespace SlackComponents;
+namespace SlackComponents\Routing;
+
+use SlackComponents\CallbackId;
 
 class CompiledResource {
 

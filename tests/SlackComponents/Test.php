@@ -4,8 +4,8 @@ use GuzzleHttp\Client;
 use SlackComponents\CallbackId;
 use SlackComponents\Utils\ApiClient;
 use SlackComponents\Utils\TestUtils;
-use SlackComponents\SlackRouter;
-use SlackComponents\CompiledResource;
+use SlackComponents\Routing\SlackRouter;
+use SlackComponents\Routing\CompiledResource;
 
 class Test {
 

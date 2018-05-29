@@ -1,9 +1,10 @@
 <?php
 
-namespace SlackComponents;
+namespace SlackComponents\Components;
 
-use SlackComponents\Components\AbstractComponent;
-use SlackComponents\CompiledResource;
+use SlackComponents\Routing\CompiledResource;
+use SlackComponents\Routing\SlackRouter;
+
 
 abstract class InterractiveMessage extends AbstractComponent {
 
@@ -19,6 +20,10 @@ abstract class InterractiveMessage extends AbstractComponent {
 
 	public function __construct(SlackRouter $router) {
 		$this->router = $router;
+	}
+
+	public function getCallbackKey() {
+		return get_class($this);
 	}
 
 	public function build($channel, $data) {

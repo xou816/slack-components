@@ -4,10 +4,10 @@ use PHPUnit\Framework\TestCase;
 
 use GuzzleHttp\Client;
 use SlackComponents\Components\Button;
-use SlackComponents\Components\ButtonAction;
+use SlackComponents\Interaction\ButtonAction;
 use SlackComponents\Components\Style;
-use SlackComponents\InterractiveMessage;
-use SlackComponents\SlackRouter;
+use SlackComponents\Components\InterractiveMessage;
+use SlackComponents\Routing\SlackRouter;
 use SlackComponents\Utils\TestUtils;
 use SlackComponents\Utils\ApiClient;
 

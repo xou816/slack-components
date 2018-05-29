@@ -2,7 +2,7 @@
 
 namespace SlackComponents\Utils;
 
-use SlackComponents\Components\SlackInteraction;
+use SlackComponents\Interaction\SlackInteraction;
 
 class TestUtils {
 

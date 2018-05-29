@@ -1,6 +1,6 @@
 <?php
 
-namespace SlackComponents\Components;
+namespace SlackComponents\Interaction;
 
 use SlackComponents\Utils\SlackUser;
 

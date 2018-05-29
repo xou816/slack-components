@@ -1,6 +1,6 @@
 <?php
 
-namespace SlackComponents;
+namespace SlackComponents\Routing;
 
 class ResourceTransport {
 	const WEBHOOK = 'webhook';

@@ -1,6 +1,6 @@
 <?php
 
-namespace SlackComponents\Components;
+namespace SlackComponents\Interaction;
 
 class ButtonAction implements SlackInteraction {
 

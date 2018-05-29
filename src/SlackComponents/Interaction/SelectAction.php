@@ -1,6 +1,6 @@
 <?php
 
-namespace SlackComponents\Components;
+namespace SlackComponents\Interaction;
 
 class SelectAction implements SlackInteraction {
 
@@ -11,10 +11,8 @@ class SelectAction implements SlackInteraction {
 	public function __construct($action) {
 		$this->raw = $action;
 		$this->selected_options = isset($action['selected_options']) ?
-			array_map(function($o) {
-				return $o;
-			}, $action['selected_options']) :
-			null;
+			$action['selected_options']) :
+			[];
 		$this->name = isset($action['name']) ? $action['name'] : null;
 	}
 
@@ -27,11 +25,15 @@ class SelectAction implements SlackInteraction {
 	}
 
 	public function getSelectedOptions() {
-		return $this->selected_options;
+		return array_map(function($selected) {
+			return $selected['value'];
+		}, $this->selected_options);
 	}
 
 	public function getValue() {
-	    return $this->selected_options[0]['value'];
+	    return count($this->selected_options) > 0 ? 
+	    	$this->selected_options[0]['value'] :
+	    	null;
     }
 
 	public function getName() {

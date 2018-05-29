@@ -2,6 +2,9 @@
 
 namespace SlackComponents\Components;
 
+use SlackComponents\Interaction\ReflectionHandler;
+use SlackComponents\Interaction\SelectAction;
+
 class Select extends StaticComponent {
 
     private $name;

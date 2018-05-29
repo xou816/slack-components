@@ -2,8 +2,11 @@
 
 namespace SlackComponents\Components;
 
-use SlackComponents\CompiledResource;
 use SlackComponents\CallbackId;
+use SlackComponents\Routing\CompiledResource;
+use SlackComponents\Interaction\SlackInteraction;
+use SlackComponents\Interaction\ReflectionHandler;
+use SlackComponents\Interaction\DialogSubmission;
 
 class DialogSubmissionBuilder extends ReflectionHandler {
 
@@ -55,7 +58,7 @@ class Dialog extends AbstractComponent {
         return [
             'title' => $this->title,
             'submit_label' => $this->label,
-            'elements' => $this->elements->patchState($state)
+            'elements' => $this->elements
         ];
     }
 

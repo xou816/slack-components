@@ -1,10 +1,11 @@
 <?php
 
-namespace SlackComponents;
+namespace SlackComponents\Routing;
 
 use GuzzleHttp\Client;
 use GuzzleHttp\Psr7;
 use SlackComponents\Utils\ApiClient;
+use SlackComponents\CallbackId;
 
 class SlackRouter {
 

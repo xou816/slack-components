@@ -6,12 +6,12 @@ use GuzzleHttp\Client;
 use SlackComponents\Components\Dialog;
 use SlackComponents\Components\TextInput;
 use SlackComponents\Components\Button;
-use SlackComponents\Components\SlackInteraction;
-use SlackComponents\Components\DialogSubmission;
-use SlackComponents\InterractiveMessage;
-use SlackComponents\SlackRouter;
-use SlackComponents\ResourceTransport;
-use SlackComponents\CompiledResource;
+use SlackComponents\Interaction\SlackInteraction;
+use SlackComponents\Interaction\DialogSubmission;
+use SlackComponents\Components\InterractiveMessage;
+use SlackComponents\Routing\SlackRouter;
+use SlackComponents\Routing\ResourceTransport;
+use SlackComponents\Routing\CompiledResource;
 use SlackComponents\Utils\TestUtils;
 use SlackComponents\Utils\ApiClient;
 

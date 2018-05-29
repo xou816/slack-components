@@ -5,9 +5,9 @@ use Prophecy\Argument;
 use GuzzleHttp\Client;
 use Psr\Http\Message\RequestInterface; 
 
-use SlackComponents\SlackRouter;
-use SlackComponents\SlackRouterException;
-use SlackComponents\CompiledResource;
+use SlackComponents\Routing\SlackRouter;
+use SlackComponents\Routing\SlackRouterException;
+use SlackComponents\Routing\CompiledResource;
 use SlackComponents\Utils\ApiClient;
 
 class SlackRouterTest extends TestCase {

@@ -2,6 +2,9 @@
 
 namespace SlackComponents\Components;
 
+use SlackComponents\Interaction\ReflectionHandler;
+use SlackComponents\Interaction\ButtonAction;
+
 class Button extends StaticComponent {
 
     private $value;

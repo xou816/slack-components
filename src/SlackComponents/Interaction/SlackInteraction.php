@@ -1,6 +1,6 @@
 <?php
 
-namespace SlackComponents\Components;
+namespace SlackComponents\Interaction;
 
 interface SlackInteraction {
 	const MESSAGE = 'interactive_message';
