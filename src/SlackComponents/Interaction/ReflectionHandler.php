@@ -16,17 +16,18 @@ abstract class ReflectionHandler {
 	public function build(\Closure $handler) {
 		$ref = new \ReflectionFunction($handler);
 		return function($payload) use ($handler, $ref) {
+			$data = $payload['callback_id']->getData();
 			$interaction = $this->getInteraction($payload);
 			if (is_null($interaction)) {
 				return null;
 			} else {	
-	            $params = array_map(function(\ReflectionParameter $param) use ($payload, $interaction) {
+	            $params = array_map(function(\ReflectionParameter $param) use ($payload, $interaction, $data) {
 	            	$clazz = $param->getClass();
 	            	$name = $param->getName();
 					if ($name === 'payload') {
 						return $payload;
-					} else if (isset($payload['callback_data'][$name])) {
-						return $payload['callback_data'][$name];
+					} else if (isset($data[$name])) {
+						return $data[$name];
 					} else if (!is_null($clazz) && $clazz->isSubclassOf(SlackInteraction::class)) {
 						return $interaction;
 					} else if (!is_null($clazz) && $clazz->isSubclassOf(SlackUser::class)) {

@@ -2,7 +2,7 @@
 
 namespace SlackComponents\Components;
 
-use SlackComponents\Routing\CompiledResource;
+use SlackComponents\Routing\SlackPayload;
 use SlackComponents\Routing\SlackRouter;
 
 
@@ -28,10 +28,10 @@ abstract class InterractiveMessage extends AbstractComponent {
 
 	public function build($channel, $data) {
 	    $res = $this->patchState($data);
-	    return CompiledResource::compileMessage($channel, $res);
+	    return SlackPayload::create(SlackPayload::WEBHOOK, $channel, $res);
 	}
 
-	public function send(CompiledResource $res) {
+	public function send(SlackPayload $res) {
 	    return $this->router->send($res);
     }
 
@@ -39,28 +39,30 @@ abstract class InterractiveMessage extends AbstractComponent {
 	    $this->router->send($this->build($channel, $args));
     }
 
-	protected function when(\Closure $handler, $channel) {
-	    $this->router->now($channel, function($payload) use ($handler, $channel) {
-	        if (isset($payload['original_message'])) {
-	        	$this->restoreState($payload['original_message'], $payload['callback_data']);
-	        }
-	        $resp = $handler($payload);
-	        return is_a($resp, CompiledResource::class) ? $resp :
-	        	CompiledResource::compileResponse($channel, $payload['response_url'], $handler($payload));
+    private function createResponse($payload, \Closure $handler) {
+    	if (isset($payload['original_message'])) {
+	        $this->restoreState($payload['original_message'], $payload['callback_id']->getData());
+	    }
+	    $resp = $handler($payload);
+	    return is_a($resp, SlackPayload::class) ? $resp :
+	        SlackPayload::create(SlackPayload::RESPONSE, $payload['response_url'], $handler($payload));
+    }
+
+	protected function when(\Closure $handler, $callbackKey = null) {
+		$callbackKey = is_null($callbackKey) ? $this->getCallbackKey() : $callbackKey;
+	    $this->router->when($callbackKey, function($payload) use ($handler) {
+	        return $this->createResponse($payload, $handler);
         });
 	    return $this;
     }
 
-    protected function after(\Closure $handler, $channel) {
-        $this->router->later($channel, function($payload) use ($handler, $channel) {
-            if (isset($payload['original_message'])) {
-            	$this->restoreState($payload['original_message'], $payload['callback_data']);
-            }
-            $resp = $handler($payload);
-            return is_a($resp, CompiledResource::class) ? $resp :
-            	CompiledResource::compileResponse($channel, $payload['response_url'], $handler($payload));
+    protected function after(\Closure $handler, $callbackKey = null) {
+    	$callbackKey = is_null($callbackKey) ? $this->getCallbackKey() : $callbackKey;
+        $this->router->when($callbackKey, function($payload) use ($handler) {
+	        return $this->createResponse($payload, $handler)
+	        	->withType(SlackPayload::RESPONSE_DEFER);
         });
-        return $this;
+	    return $this;
     }
 
 	protected abstract function buildMessage($state);

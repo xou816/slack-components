@@ -2,8 +2,8 @@
 
 namespace SlackComponents\Components;
 
-use SlackComponents\CallbackId;
-use SlackComponents\Routing\CompiledResource;
+use SlackComponents\Components\CallbackId;
+use SlackComponents\Routing\SlackPayload;
 use SlackComponents\Interaction\SlackInteraction;
 use SlackComponents\Interaction\ReflectionHandler;
 use SlackComponents\Interaction\DialogSubmission;
@@ -24,8 +24,10 @@ class Dialog extends AbstractComponent {
     private $elements;
     private $label;
     private $title;
+    private $callbackId;
 
     public function __construct($elements) {
+        $this->callbackId = new CallbackId();
         $this->elements = new ArrayComponent($elements);
     }
 
@@ -55,10 +57,14 @@ class Dialog extends AbstractComponent {
     }
 
     protected function buildTree($state) {
+        $id = isset($state['__dialogCallbackKey']) ?
+            $this->callbackId->withKey($state['__dialogCallbackKey']) :
+            $this->callbackId;
         return [
             'title' => $this->title,
             'submit_label' => $this->label,
-            'elements' => $this->elements
+            'elements' => $this->elements,
+            'callback_id' => $id
         ];
     }
 
@@ -72,9 +78,12 @@ class Dialog extends AbstractComponent {
 
     public function open() {
         return function($payload) {
-            $render = $this->buildTree($payload['callback_data']);
-            $decoded = CallbackId::read($payload['callback_id']);
-            return CompiledResource::compileDialog($decoded['channel'], $payload['trigger_id'], $render);
+            $id = CallbackId::read($payload['callback_id']);
+            $state = array_replace($id->getData(), [
+                '__dialogCallbackKey' => $id->getKey()
+            ]);
+            $render = $this->buildTree($state);
+            return SlackPayload::create(SlackPayload::DIALOG, $payload['trigger_id'], $render);
         };
     }
 

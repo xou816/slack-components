@@ -17,7 +17,7 @@ class CallbackId extends StaticComponent {
 	}
 
 	public function getData() {
-		return $this;
+		return $this->data;
 	}
 
 	public function withKey($key) {
@@ -29,7 +29,7 @@ class CallbackId extends StaticComponent {
 		$fromContext = is_null($this->getContext()) ? 
 			null : $this->getContext()->getCallbackKey();
 		return is_null($this->key) ?
-			 $fromContext : null;
+			 $fromContext : $this->key;
 	}
 	
 	public function build() {
@@ -40,12 +40,35 @@ class CallbackId extends StaticComponent {
 		return base64_encode(json_encode($arr));
 	}
 
-	public static function read($callbackId) {
-		try {
-            return json_decode(base64_decode($callbackId), true);
-        } catch (\Exception $e) {
-            return ['key' => null, 'data' => []];
-        }
+	public function __toString() {
+		return $this->build();
 	}
+
+	public static function read($callbackId) {
+		$default = ['key' => null, 'data' => []];
+		$raw = [];
+		try {
+            $raw = array_replace($default, json_decode(base64_decode($callbackId), true));
+        } catch (\Exception $e) {
+            $raw = $default;
+        }
+        $id = new CallbackId();
+        return $id
+            ->withKey($raw['key'])
+            ->withData($raw['data']);
+	}
+
+	public static function just($key) {
+		$id = new CallbackId();
+        return $id
+          	->withKey($key)
+          	->build();
+	}
+
+	public static function wrap($data) {
+		$id = new CallbackId();
+        return $id
+          	->withData($data);
+    	}
 
 }

@@ -1,15 +1,15 @@
 <?php
 
-use PHPUnit\Framework\TestCase;
+namespace SlackComponents\Tests;
 
 use GuzzleHttp\Client;
 use SlackComponents\Components\Button;
 use SlackComponents\Interaction\ButtonAction;
 use SlackComponents\Components\Style;
+use SlackComponents\Components\CallbackId;
 use SlackComponents\Components\InterractiveMessage;
 use SlackComponents\Routing\SlackRouter;
 use SlackComponents\Utils\TestUtils;
-use SlackComponents\Utils\ApiClient;
 
 class MyMessage extends InterractiveMessage {
 
@@ -18,7 +18,7 @@ class MyMessage extends InterractiveMessage {
         $this->button = new Button('btn');
         $this->when($this->button->clicked(function($count) {
             return $this->patchState(['count' => $count + 1]);
-        }), 'some_channel');
+        }));
     }
 
     protected function buildMessage($count) {
@@ -26,9 +26,9 @@ class MyMessage extends InterractiveMessage {
             'text' => $count,
             'attachments' => [
                 [
-                    'callback_data' => [
+                    'callback_id' => CallbackId::wrap([
                         'count' => $count
-                    ],
+                    ]),
                     'actions' => [
                         $this->button
                             ->withLabel('Increment')
@@ -39,11 +39,7 @@ class MyMessage extends InterractiveMessage {
     }
 }
 
-class InterractiveMessageTest extends TestCase {
-
-	private function createSimpleRouter() {
-		return Test::createSimpleRouter($this->createMock(Client::class), $this->createMock(ApiClient::class));
-	}
+class InterractiveMessageTest extends SlackTestCase {
 
 	public function testButtonsCanBeCreatedFluently() {
 		$btn = new Button('the_name', 'the_value');
@@ -61,10 +57,11 @@ class InterractiveMessageTest extends TestCase {
 	public function testMessagesRegisterHandlers() {
 		$router = $this->createSimpleRouter();
 		$msg = new MyMessage($router);
-		$compiled = $msg->build('some_channel', ['count' => 0]);
-		$this->assertEquals(0, $compiled->getResource()['text']);
-		$payload = TestUtils::getPayload($compiled->getResource(), 'btn', 'btn');
-		$resp = $router->handleNow($payload, false);
-		$this->assertEquals(1, $resp->getResource()['text']);
+		$compiled = $msg->build('any', ['count' => 0]);
+		$this->assertEquals(0, $compiled->getPayload()['text']);
+		$payload = TestUtils::getPayload($compiled->getPayload(), 'btn', 'btn');
+        $payload['callback_id'] = CallbackId::just($msg->getCallbackKey());
+		$resp = $router->handle($payload);
+		$this->assertEquals(1, $resp->getPayload()['text']);
 	}
 }
