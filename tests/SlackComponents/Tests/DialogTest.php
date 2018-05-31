@@ -64,7 +64,7 @@ class DialogMessageTest extends SlackTestCase {
         $msg = new MyMessageWithDialog($router);
         $compiled = $msg->build('some_channel', []);
         $payload = TestUtils::getPayload($compiled->getPayload(), 'btn', 'btn');
-        $resp = $router->handle($payload, false);
+        $resp = $router->handle($payload);
         $payload = TestUtils::getDialogSubmission($resp->getPayload(), ['name' => 'Roger']);
         $resp = $router->handle($payload)->getPayload();
         $this->assertEquals('Roger', $resp);

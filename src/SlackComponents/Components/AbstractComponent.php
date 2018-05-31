@@ -8,8 +8,6 @@ abstract class AbstractComponent {
     private $state = [];
     private $context = null;
 
-    const STATE_HOLDER = 'callback_data';
-
     public function getRendered() {
         return $this->rendered;
     }
@@ -30,8 +28,9 @@ abstract class AbstractComponent {
     protected function getState() {
         $state = array_replace($this->defaultState(), $this->state);
         $rendered = $this->getRendered();
-        if (is_array($rendered) && isset($rendered[self::STATE_HOLDER])) {
-            return array_replace($state, $rendered[self::STATE_HOLDER]);
+        if (is_array($rendered) && isset($rendered['callback_id'])) {
+            $id = CallbackId::read($rendered['callback_id']);
+            return array_replace($state, $id->getData());
         } else {
             return $state;
         }

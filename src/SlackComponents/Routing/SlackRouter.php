@@ -11,9 +11,10 @@ class SlackRouter {
 	private $options;
 	private $handlers = [];
 
-    public function __construct(Client $client, $options) {
+    public function __construct(Client $client, $options = []) {
     	$options = array_replace([
-    		'safe' => true
+    		'safe' => true,
+    		'app_token' => 'INVALID_TOKEN'
     	], $options);
 		$this->client = new SlackClient($client, $options);
 		$this->options = $options;

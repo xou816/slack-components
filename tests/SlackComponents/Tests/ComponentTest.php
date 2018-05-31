@@ -2,6 +2,7 @@
 
 namespace SlackComponents\Tests;
 
+use SlackComponents\Components\CallbackId;
 use SlackComponents\Components\AbstractComponent;
 use SlackComponents\Components\ArrayComponent;
 use SlackComponents\Components\LazyComponent;
@@ -69,12 +70,12 @@ class ComponentTest extends SlackTestCase {
 	public function testComponentsCarryState() {
 		$comp = new TestableComponent();
 		$comp->restoreState([
-			'callback_data' => ['stored_key' => true]
+			'callback_id' => CallbackId::wrap(['stored_key' => true])
 		], ['key' => 'custom']);
-		$this->assertEquals($comp->getState(), [
+		$this->assertEquals([
 			'key' => 'custom',
 			'stored_key' => true
-		]);
+		], $comp->getState());
 	}
 
 	public function testLazyComponentRendersIfInterested() {

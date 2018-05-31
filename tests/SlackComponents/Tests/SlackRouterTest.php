@@ -32,7 +32,7 @@ class SlackRouterTest extends SlackTestCase {
 	public function testTokenIsVerified() {
 		$router = $this->createSimpleRouter(true);
 		$this->expectException(SlackRouterException::class);
-		$router->hookBeforeResponse($this->trigger('any'));
+		$router->handle($this->trigger('any'));
 	}
 
 	public function testOnlyTheRelevantHandlerResponds() {

@@ -15,7 +15,7 @@ class SlackClientTest extends SlackTestCase {
 	public function testClientCanSendDialogs() {
 		$client = $this->prophesize(Client::class);
 		$client->send(Argument::any())->willReturn(new Response());
-		$slack = new SlackClient($client->reveal(), ['app_token' => 'app_token']);
+		$slack = new SlackClient($client->reveal(), ['app_token' => 'INVALID_TOKEN']);
 		$slack->send(SlackPayload::create(SlackPayload::DIALOG, 'trigger', ['key' => 'value']));
 		$client->send(Argument::that(function(RequestInterface $req) {
 			$body = [];

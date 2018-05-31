@@ -45,6 +45,9 @@ class CallbackId extends StaticComponent {
 	}
 
 	public static function read($callbackId) {
+		if (is_a($callbackId, CallbackId::class)) {
+        	return $callbackId;
+        }
 		$default = ['key' => null, 'data' => []];
 		$raw = [];
 		try {
