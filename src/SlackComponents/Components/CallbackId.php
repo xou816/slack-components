@@ -34,8 +34,8 @@ class CallbackId extends StaticComponent {
 	
 	public function build() {
 		$arr = ['key' => $this->getKey()];
-		if (!is_null($data)) {
-			$arr['data'] = $data;
+		if (!is_null($this->data)) {
+			$arr['data'] = $this->data;
 		}
 		return base64_encode(json_encode($arr));
 	}
@@ -65,7 +65,7 @@ class CallbackId extends StaticComponent {
           	->build();
 	}
 
-	public static function wrap($data) {
+	public static function wrap($data = null) {
 		$id = new CallbackId();
         return $id
           	->withData($data);

@@ -27,7 +27,7 @@ class MyMessage extends InterractiveMessage {
             'attachments' => [
                 [
                     'callback_id' => CallbackId::wrap([
-                        'count' => $count
+                        'count' => 3
                     ]),
                     'actions' => [
                         $this->button
@@ -60,8 +60,7 @@ class InterractiveMessageTest extends SlackTestCase {
 		$compiled = $msg->build('any', ['count' => 0]);
 		$this->assertEquals(0, $compiled->getPayload()['text']);
 		$payload = TestUtils::getPayload($compiled->getPayload(), 'btn', 'btn');
-        $payload['callback_id'] = CallbackId::just($msg->getCallbackKey());
 		$resp = $router->handle($payload);
-		$this->assertEquals(1, $resp->getPayload()['text']);
+		$this->assertEquals(4, $resp->getPayload()['text']);
 	}
 }

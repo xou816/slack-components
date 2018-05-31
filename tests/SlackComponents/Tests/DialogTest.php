@@ -36,6 +36,7 @@ class MyMessageWithDialog extends InterractiveMessage {
             'text' => 'Dialog demo',
             'attachments' => [
                 [
+                    'callback_id' => CallbackId::wrap(),
                     'actions' => [
                         $this->button
                             ->withLabel('Open dialog')
@@ -53,7 +54,6 @@ class DialogMessageTest extends SlackTestCase {
 		$msg = new MyMessageWithDialog($router);
 		$compiled = $msg->build('some_channel', []);
 		$payload = TestUtils::getPayload($compiled->getPayload(), 'btn', 'btn');
-        $payload['callback_id'] = CallbackId::just($msg->getCallbackKey());
 		$resp = $router->handle($payload);
         $this->assertEquals(SlackPayload::DIALOG, $resp->getType());
 	}
@@ -64,7 +64,6 @@ class DialogMessageTest extends SlackTestCase {
         $msg = new MyMessageWithDialog($router);
         $compiled = $msg->build('some_channel', []);
         $payload = TestUtils::getPayload($compiled->getPayload(), 'btn', 'btn');
-        $payload['callback_id'] = CallbackId::just($msg->getCallbackKey());
         $resp = $router->handle($payload, false);
         $payload = TestUtils::getDialogSubmission($resp->getPayload(), ['name' => 'Roger']);
         $resp = $router->handle($payload)->getPayload();
