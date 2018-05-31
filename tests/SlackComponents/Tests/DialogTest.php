@@ -26,7 +26,7 @@ class MyMessageWithDialog extends InterractiveMessage {
         $this->dialog = $myDialog;
         $this->button = new Button('btn');
         $this->when($this->button->clicked($this->dialog->open()));
-        $this->after($this->dialog->submitted(function(DialogSubmission $sub) {
+        $this->when($this->dialog->submitted(function(DialogSubmission $sub) {
             return $sub->name;
         }));
     }
@@ -67,7 +67,6 @@ class DialogMessageTest extends SlackTestCase {
         $payload['callback_id'] = CallbackId::just($msg->getCallbackKey());
         $resp = $router->handle($payload, false);
         $payload = TestUtils::getDialogSubmission($resp->getPayload(), ['name' => 'Roger']);
-        $payload['callback_id'] = $payload['callback_id']->build();
         $resp = $router->handle($payload)->getPayload();
         $this->assertEquals('Roger', $resp);
     }

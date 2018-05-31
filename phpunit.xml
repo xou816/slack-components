@@ -14,7 +14,7 @@
     bootstrap="tests/bootstrap.php">
     <testsuites>
         <testsuite name="SlackComponents Tests">
-            <directory>./tests/</directory>
+            <directory>./tests/SlackComponents/Tests</directory>
         </testsuite>
     </testsuites>
 </phpunit>

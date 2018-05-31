@@ -2,7 +2,6 @@
 
 namespace SlackComponents\Tests;
 
-use PHPUnit\Framework\TestCase;
 use Prophecy\Argument;
 use GuzzleHttp\Client;
 use Psr\Http\Message\RequestInterface; 

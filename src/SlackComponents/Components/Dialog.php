@@ -82,7 +82,7 @@ class Dialog extends AbstractComponent {
             $state = array_replace($id->getData(), [
                 '__dialogCallbackKey' => $id->getKey()
             ]);
-            $render = $this->buildTree($state);
+            $render = $this->patchState($state);
             return SlackPayload::create(SlackPayload::DIALOG, $payload['trigger_id'], $render);
         };
     }

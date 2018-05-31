@@ -1,6 +1,7 @@
 <?php
 
-use PHPUnit\Framework\TestCase;
+namespace SlackComponents\Tests;
+
 use SlackComponents\Components\AbstractComponent;
 use SlackComponents\Components\ArrayComponent;
 use SlackComponents\Components\LazyComponent;
@@ -47,7 +48,7 @@ class TestableComponent extends AbstractComponent {
 
 }
 
-class ComponentTest extends TestCase {
+class ComponentTest extends SlackTestCase {
 
 	public function testComponentsRenderToPlainArrays() {
 		$comp = new TestableComponent([
