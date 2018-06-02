@@ -55,7 +55,7 @@ class SlackRouter {
 
 	public function hookBeforeResponse($payload) {
 		$res = $this->handle($payload);
-		if (!is_null($res) && $payload->getType() === SlackPayload::RESPONSE) {
+		if (!is_null($res) && $res->getType() === SlackPayload::RESPONSE) {
 			return $res->getPayload();
 		}
 	}
