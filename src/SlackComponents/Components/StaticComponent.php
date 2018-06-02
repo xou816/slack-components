@@ -17,4 +17,5 @@ abstract class StaticComponent extends AbstractComponent {
     protected function defaultState() {
         return [];
     }
+
 }

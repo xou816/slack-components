@@ -2,12 +2,13 @@
 
 namespace SlackComponents\Components;
 
-class TextInput extends StaticComponent {
+class Textarea extends StaticComponent {
 
     private $label;
     private $name;
     private $placeholder;
     private $subtype = null;
+    private $value;
 
     public function __construct($name, $label = null) {
         $this->name = $name;
@@ -32,11 +33,17 @@ class TextInput extends StaticComponent {
         return $this;
     }
 
+    public function withValue($value) {
+        $this->value = $value;
+        return $this;
+    }
+
     public function build() {
         return [
-            'type' => 'text',
+            'type' => 'textarea',
             'label' => $this->label,
-            'name' => $this->name
+            'name' => $this->name,
+            'value' => $this->value
         ];
     }
 }

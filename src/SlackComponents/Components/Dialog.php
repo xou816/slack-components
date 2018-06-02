@@ -26,9 +26,13 @@ class Dialog extends AbstractComponent {
     private $title;
     private $callbackId;
 
-    public function __construct($elements) {
+    public function __construct($title = 'Dialog') {
         $this->callbackId = new CallbackId();
-        $this->elements = new ArrayComponent($elements);
+        $this->title = $title;
+    }
+
+    public static function create($title) {
+        return new Dialog($title);
     }
 
     public function withElements($elements) {
@@ -57,6 +61,7 @@ class Dialog extends AbstractComponent {
     }
 
     protected function buildTree($state) {
+        $this->elements->setContext($this);
         $id = isset($state['__dialogCallbackKey']) ?
             $this->callbackId->withKey($state['__dialogCallbackKey']) :
             $this->callbackId;

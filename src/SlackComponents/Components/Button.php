@@ -20,8 +20,8 @@ class Button extends StaticComponent {
         $this->builder = ReflectionHandler::createSimple($name, ButtonAction::class);
     }
 
-    public static function name($name, $value = null) {
-        return new Button($name, $value);
+    public static function create($name) {
+        return new Button($name);
     }
 
     public function getName() {

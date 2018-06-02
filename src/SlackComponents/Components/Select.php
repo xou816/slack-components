@@ -18,7 +18,7 @@ class Select extends StaticComponent {
         $this->builder = ReflectionHandler::createSimple($name, SelectAction::class);
     }
 
-    public static function name($name) {
+    public static function create($name) {
         return new Select($name);
     }
 
@@ -29,7 +29,12 @@ class Select extends StaticComponent {
             'name' => $this->name,
             'text' => $this->text,
             'style' =>  $this->style,
-            'options' => $this->options
+            'options' => array_map(function($el) {
+                return [
+                    $this->textOrLabel() => $el['text'],
+                    'value' => $el['value']
+                ];
+            }, $this->options)
         ];
     }
 
@@ -45,6 +50,14 @@ class Select extends StaticComponent {
     public function withStyle($style) {
         $this->style = $style;
         return $this;
+    }
+
+    private function textOrLabel() {
+        if (is_null($this->getContext()) || get_class($this->getContext()) === Dialog::class) {
+            return 'label';
+        } else {
+            return 'text';
+        }
     }
 
     public function withOption($value, $text) {

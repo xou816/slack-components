@@ -6,6 +6,7 @@ use GuzzleHttp\Client;
 use SlackComponents\Components\Dialog;
 use SlackComponents\Components\TextInput;
 use SlackComponents\Components\Button;
+use SlackComponents\Components\Select;
 use SlackComponents\Components\CallbackId;
 use SlackComponents\Interaction\SlackInteraction;
 use SlackComponents\Interaction\DialogSubmission;
@@ -14,9 +15,13 @@ use SlackComponents\Routing\SlackRouter;
 use SlackComponents\Routing\SlackPayload;
 use SlackComponents\Utils\TestUtils;
 
-$myDialog = new Dialog([
-    new TextInput('name', 'Please enter your name below')
-]);
+$myDialog = Dialog::create('Test dialog')
+    ->withElements([
+        TextInput::create('name')
+            ->withLabel('Please enter your name below'),
+        Select::create('select')
+            ->withOption('opt1', 'Option 1')
+    ]);
 
 class MyMessageWithDialog extends InterractiveMessage {
 
