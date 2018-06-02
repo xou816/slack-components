@@ -64,6 +64,8 @@ class SlackRouter {
 		$res = $this->handle($payload);
 		if (!is_null($res)) {
 			$this->client->send($res);
+        } else {
+        	return null;
         }
 	}
 
