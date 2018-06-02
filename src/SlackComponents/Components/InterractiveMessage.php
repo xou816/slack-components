@@ -48,8 +48,13 @@ abstract class InterractiveMessage extends AbstractComponent {
 	    	return null;
 	    } else {
 	    	return is_a($resp, SlackPayload::class) ? $resp : 
-	    		SlackPayload::create(SlackPayload::RESPONSE, $payload['response_url'], $handler($payload));
+	    		SlackPayload::create(SlackPayload::RESPONSE, $payload['response_url'], $resp);
 	    }	    		
+    }
+
+    protected function callback($data) {
+    	return CallbackId::wrap($data)
+    		->withKey($this->getCallbackKey());
     }
 
 	protected function when(\Closure $handler, $callbackKey = null) {
@@ -62,17 +67,23 @@ abstract class InterractiveMessage extends AbstractComponent {
 
     protected function after(\Closure $handler, $callbackKey = null) {
     	$callbackKey = is_null($callbackKey) ? $this->getCallbackKey() : $callbackKey;
-        $this->router->when($callbackKey, function($payload) use ($handler) {
-	        return $this->createResponse($payload, $handler)
-	        	->withType(SlackPayload::RESPONSE_DEFER);
+        $this->router->when($callbackKey, function($payload) use ($handler, $callbackKey) {
+	        $resp = $this->createResponse($payload, $handler);
+	        if (!is_null($resp)) {
+	        	return $resp->withType(SlackPayload::RESPONSE_DEFER);
+	        } else {
+	        	return $resp;
+	        }
         });
 	    return $this;
     }
 
-	protected abstract function buildMessage($state);
+	protected function __buildMessage() {
+		return 'buildMessage';
+	}
 
 	protected function buildTree($state) {
-		$ref = new \ReflectionMethod($this, 'buildMessage');
+		$ref = new \ReflectionMethod($this, $this->__buildMessage());
 		$params = $ref->getParameters();
 		$l = count($params);
 		$params = array_map(function(\ReflectionParameter $param) use ($state, $l) {
@@ -83,7 +94,7 @@ abstract class InterractiveMessage extends AbstractComponent {
 				return $state;
 			}
 		}, $ref->getParameters()); 
-		return call_user_func_array([$this, 'buildMessage'], $params);
+		return call_user_func_array([$this, $this->__buildMessage()], $params);
     }
 
     protected function defaultState() {

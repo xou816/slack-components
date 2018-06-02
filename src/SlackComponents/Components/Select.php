@@ -18,6 +18,11 @@ class Select extends StaticComponent {
         $this->builder = ReflectionHandler::createSimple($name, SelectAction::class);
     }
 
+    public static function name($name) {
+        return new Select($name);
+    }
+
+
     public function build() {
         return [
             'type' => 'select',

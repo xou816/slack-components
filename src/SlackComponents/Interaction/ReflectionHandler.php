@@ -20,7 +20,7 @@ abstract class ReflectionHandler {
 			$interaction = $this->getInteraction($payload);
 			if (is_null($interaction)) {
 				return null;
-			} else {	
+			} else {
 	            $params = array_map(function(\ReflectionParameter $param) use ($payload, $interaction, $data) {
 	            	$clazz = $param->getClass();
 	            	$name = $param->getName();
@@ -30,7 +30,7 @@ abstract class ReflectionHandler {
 						return $data[$name];
 					} else if (!is_null($clazz) && $clazz->isSubclassOf(SlackInteraction::class)) {
 						return $interaction;
-					} else if (!is_null($clazz) && $clazz->isSubclassOf(SlackUser::class)) {
+					} else if (!is_null($clazz) && $clazz->getName() === SlackUser::class) {
 						$user = new SlackUser();
 						return $user
 							->setId($payload['user']['id'])

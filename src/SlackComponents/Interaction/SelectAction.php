@@ -11,7 +11,7 @@ class SelectAction implements SlackInteraction {
 	public function __construct($action) {
 		$this->raw = $action;
 		$this->selected_options = isset($action['selected_options']) ?
-			$action['selected_options']) :
+			$action['selected_options'] :
 			[];
 		$this->name = isset($action['name']) ? $action['name'] : null;
 	}

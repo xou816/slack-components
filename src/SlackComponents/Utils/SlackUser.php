@@ -1,6 +1,6 @@
 <?php
 
-namespace SlackComponent\Utils;
+namespace SlackComponents\Utils;
 
 class SlackUser {
 

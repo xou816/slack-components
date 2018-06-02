@@ -17,9 +17,7 @@ class LazyComponent extends AbstractComponent {
     }
 
     protected function isInterestedIn($patch) {
-        return array_reduce(array_keys($patch), function($prev, $key) {
-            return $prev || in_array($key, $this->subscribed);
-        }, false);
+        return count(array_intersect(array_keys($patch), $this->subscribed)) > 0;
     }
 
     protected function buildTree($patch) {

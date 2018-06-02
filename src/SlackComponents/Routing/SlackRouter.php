@@ -20,8 +20,8 @@ class SlackRouter {
 		$this->options = $options;
 	}
 
-	public function handle($payload) {
-		if ($this->options['safe'] && $payload['token'] != $this->options['token']) {
+	public function handle($payload, $safe = true) {
+		if ($this->options['safe'] && $safe && $payload['token'] != $this->options['token']) {
 			throw new SlackRouterException('Token mismatch');
 		} else {
            	$id = CallbackId::read($payload['callback_id']);
