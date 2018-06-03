@@ -62,14 +62,15 @@ class Dialog extends AbstractComponent {
 
     protected function buildTree($state) {
         $this->elements->setContext($this);
-        $id = isset($state['__dialogCallbackKey']) ?
-            $this->callbackId->withKey($state['__dialogCallbackKey']) :
+        $id = isset($state['__tmp__']) ?
+            $this->callbackId->withKey($state['__tmp__']) :
             $this->callbackId;
+        unset($state['__tmp__']);
         return [
             'title' => $this->title,
             'submit_label' => $this->label,
             'elements' => $this->elements,
-            'callback_id' => $id
+            'callback_id' => $id->withData($state)
         ];
     }
 
@@ -85,7 +86,7 @@ class Dialog extends AbstractComponent {
         return function($payload) {
             $id = CallbackId::read($payload['callback_id']);
             $state = array_replace($id->getData(), [
-                '__dialogCallbackKey' => $id->getKey()
+                '__tmp__' => $id->getKey()
             ]);
             $render = $this->patchState($state);
             return SlackPayload::create(SlackPayload::DIALOG, $payload['trigger_id'], $render);
