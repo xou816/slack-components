@@ -82,7 +82,7 @@ class InterractiveMessageTest extends SlackTestCase {
 
     public function testAnonymousMessageCanBeCreated() {
         $router = $this->createSimpleRouter();
-        $msg = InterractiveMessage::from($router, function($msg) {
+        $msg = InterractiveMessage::create($router, function($msg) {
             return [
                 'text' => $msg
             ];

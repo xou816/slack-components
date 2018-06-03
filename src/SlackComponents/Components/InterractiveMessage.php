@@ -24,7 +24,7 @@ abstract class InterractiveMessage extends AbstractComponent {
 		$this->router = $router;
 	}
 
-	public static function from(SlackRouter $router, \Closure $c) {
+	public static function create(SlackRouter $router, \Closure $c) {
 		return new AnonymousMessage($router, $c);
 	}
 
@@ -45,17 +45,19 @@ abstract class InterractiveMessage extends AbstractComponent {
 	    $this->router->send($this->build($channel, $args));
     }
 
-    private function createResponse($payload, \Closure $handler) {
-    	if (isset($payload['original_message'])) {
-	        $this->restoreState($payload['original_message'], $payload['callback_id']->getData());
-	    }
-	    $resp = $handler($payload);
-	    if (is_null($resp)) {
-	    	return null;
-	    } else {
-	    	return is_a($resp, SlackPayload::class) ? $resp : 
-	    		SlackPayload::create(SlackPayload::RESPONSE, $payload['response_url'], $resp);
-	    }	    		
+    private function wrap(\Closure $handler) {
+    	return function($payload) use ($handler) {		
+	    	if (isset($payload['original_message'])) {
+		        $this->restoreState($payload['original_message'], $payload['callback_id']->getData());
+		    }
+		    $resp = $handler($payload);
+		    if (is_null($resp)) {
+		    	return null;
+		    } else {
+		    	return is_a($resp, SlackPayload::class) ? $resp : 
+		    		SlackPayload::create(SlackPayload::RESPONSE, $payload['response_url'], $resp);
+		    }	    		
+    	};
     }
 
     protected function callback($data) {
@@ -65,22 +67,15 @@ abstract class InterractiveMessage extends AbstractComponent {
 
 	protected function when(\Closure $handler, $callbackKey = null) {
 		$callbackKey = is_null($callbackKey) ? $this->getCallbackKey() : $callbackKey;
-	    $this->router->when($callbackKey, function($payload) use ($handler) {
-	        return $this->createResponse($payload, $handler);
-        });
+	    $wrapped = $this->wrap($handler);
+	    $this->router->when($callbackKey, $wrapped);
 	    return $this;
     }
 
     protected function after(\Closure $handler, $callbackKey = null) {
     	$callbackKey = is_null($callbackKey) ? $this->getCallbackKey() : $callbackKey;
-        $this->router->when($callbackKey, function($payload) use ($handler, $callbackKey) {
-	        $resp = $this->createResponse($payload, $handler);
-	        if (!is_null($resp) && $resp->getType() === SlackPayload::RESPONSE) {
-	        	return $resp->withType(SlackPayload::RESPONSE_DEFER);
-	        } else {
-	        	return $resp;
-	        }
-        });
+	    $wrapped = $this->wrap($handler);
+	    $this->router->when($callbackKey, $wrapped);
 	    return $this;
     }
 
