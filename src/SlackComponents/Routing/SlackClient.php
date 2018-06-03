@@ -4,6 +4,7 @@ namespace SlackComponents\Routing;
 
 use GuzzleHttp\Client;
 use GuzzleHttp\Psr7;
+use GuzzleHttp\Exception\RequestException;
 
 class SlackClient {
 
@@ -15,13 +16,25 @@ class SlackClient {
 		$this->options = $options;
 	}
 
+	private function sendReq(Psr7\Request $req) {
+		try {
+	    	$resp = $this->client->send($req);
+	    } catch (RequestException $e) {
+	    	throw new SlackClientException('request_failed');
+	    }
+	    $body = json_decode($resp->getBody(), true);
+	    if (!$body['ok']) {
+	    	throw new SlackClientException($body['error']);
+	    }
+	}
+
 	private function sendJson($uri, $body) {
 		$body = Psr7\stream_for(json_encode($body));
 		$req = new Psr7\Request('POST', Psr7\uri_for($uri));
 		$req = $req
 			->withHeader('Content-Type', 'application/json')
 	        ->withBody($body);
-	    $this->client->send($req);
+	    $this->sendReq($req);
 	}
 
 	private function dialogOpen($triggerId, $dialog) {
@@ -36,7 +49,7 @@ class SlackClient {
 		$req = $req
 			->withHeader('Content-Type', 'application/x-www-form-urlencoded')
             ->withBody($body);
-       	$this->client->send($req);
+       	$this->sendReq($req);
 	}
 
 	public function send(SlackPayload $payload) {

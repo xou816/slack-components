@@ -13,7 +13,7 @@ use SlackComponents\Routing\SlackPayload;
 class SlackTestCase extends TestCase {
 
 	public function createSimpleRouter($safe = false) {
-		$options = ['token' => 'slack_token', 'safe' => $safe || false];
+		$options = ['token' => 'slack_token', 'safe' => $safe];
 		return new SlackRouter($this->createMock(Client::class), $options);
 	}
 

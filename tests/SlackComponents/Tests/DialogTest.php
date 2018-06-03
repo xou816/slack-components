@@ -17,8 +17,11 @@ use SlackComponents\Utils\TestUtils;
 
 $myDialog = Dialog::create('Test dialog')
     ->withElements([
-        TextInput::create('name')
-            ->withLabel('Please enter your name below'),
+        function($default) {
+            return TextInput::create('name')
+                ->withValue($default)
+                ->withLabel('Please enter your name below');
+        },
         Select::create('select')
             ->withOption('opt1', 'Option 1')
     ]);
@@ -30,19 +33,20 @@ class MyMessageWithDialog extends InterractiveMessage {
         parent::__construct($router);
         $this->dialog = $myDialog;
         $this->button = new Button('btn');
-        $this->when($this->button->clicked($this->dialog->open()));
+        $this->when($this->button->clicked($this->dialog->doOpen()));
         $this->after($this->dialog->submitted(function(DialogSubmission $sub, $greet) {
             return $greet.', '.$sub->name;
         }));
     }
 
-    protected function buildMessage($_) {
+    protected function buildMessage($greet) {
         return [
             'text' => 'Dialog demo',
             'attachments' => [
                 [
                     'callback_id' => $this->callback([
-                        'greet' => 'Hello'
+                        'greet' => $greet,
+                        'default' => 'Robert'
                     ]),
                     'actions' => [
                         $this->button
@@ -59,17 +63,18 @@ class DialogMessageTest extends SlackTestCase {
 	public function testButtonsCanOpenDialog() {
 		$router = $this->createSimpleRouter();
 		$msg = new MyMessageWithDialog($router);
-		$compiled = $msg->build('some_channel', []);
-		$payload = TestUtils::getPayload($compiled->getPayload(), 'btn', 'btn');
+		$compiled = $msg->build('some_channel', ['greet' => 'Hello']);
+        $payload = TestUtils::getPayload($compiled->getPayload(), 'btn', 'btn');
 		$resp = $router->handle($payload);
         $this->assertEquals(SlackPayload::DIALOG, $resp->getType());
+        $this->assertEquals('Robert', $resp->getPayload()['elements'][0]['value']);
 	}
 
     public function testDialogsCanBeSubmitted() {
         global $myDialog;
         $router = $this->createSimpleRouter();
         $msg = new MyMessageWithDialog($router);
-        $compiled = $msg->build('some_channel', []);
+        $compiled = $msg->build('some_channel', ['greet' => 'Hello']);
         $payload = TestUtils::getPayload($compiled->getPayload(), 'btn', 'btn');
         $resp = $router->handle($payload);
         $payload = TestUtils::getDialogSubmission($resp->getPayload(), ['name' => 'Roger']);

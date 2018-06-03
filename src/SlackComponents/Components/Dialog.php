@@ -50,6 +50,14 @@ class Dialog extends AbstractComponent {
         return $this;
     }
 
+    protected function getContext() {
+        return $this;
+    }
+
+    public function getCallbackKey() {
+        return $this->callbackId->getKey();
+    }
+
     public function getKeys() {
         return array_filter(array_map(function($component) {
             if (is_a($component, StaticComponent::class)) {
@@ -61,16 +69,11 @@ class Dialog extends AbstractComponent {
     }
 
     protected function buildTree($state) {
-        $this->elements->setContext($this);
-        $id = isset($state['__tmp__']) ?
-            $this->callbackId->withKey($state['__tmp__']) :
-            $this->callbackId;
-        unset($state['__tmp__']);
         return [
             'title' => $this->title,
             'submit_label' => $this->label,
             'elements' => $this->elements,
-            'callback_id' => $id->withData($state)
+            'callback_id' => $this->callbackId
         ];
     }
 
@@ -82,14 +85,15 @@ class Dialog extends AbstractComponent {
         return [];
     }
 
-    public function open() {
+    public function open($payload) {
+        $this->callbackId = CallbackId::read($payload['callback_id']);
+        $render = $this->patchState($this->callbackId->getData());
+        return SlackPayload::create(SlackPayload::DIALOG, $payload['trigger_id'], $render);
+    } 
+
+    public function doOpen() {
         return function($payload) {
-            $id = CallbackId::read($payload['callback_id']);
-            $state = array_replace($id->getData(), [
-                '__tmp__' => $id->getKey()
-            ]);
-            $render = $this->patchState($state);
-            return SlackPayload::create(SlackPayload::DIALOG, $payload['trigger_id'], $render);
+            return $this->open($payload);
         };
     }
 

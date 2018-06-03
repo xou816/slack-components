@@ -39,6 +39,22 @@ class MyMessage extends InterractiveMessage {
     }
 }
 
+class MessageWithComputation extends InterractiveMessage {
+
+    public function __construct(SlackRouter $router) {
+        parent::__construct($router);
+        $this->foo = function($count) {
+            return 'I have '.strval($count).' foos.';
+        };
+    }
+
+    protected function buildMessage() {
+        return [
+            'text' => $this->foo
+        ];
+    }
+}
+
 class InterractiveMessageTest extends SlackTestCase {
 
 	public function testButtonsCanBeCreatedFluently() {
@@ -63,4 +79,25 @@ class InterractiveMessageTest extends SlackTestCase {
 		$resp = $router->handle($payload);
 		$this->assertEquals(4, $resp->getPayload()['text']);
 	}
+
+    public function testAnonymousMessageCanBeCreated() {
+        $router = $this->createSimpleRouter();
+        $msg = InterractiveMessage::from($router, function($msg) {
+            return [
+                'text' => $msg
+            ];
+        });
+        $compiled = $msg->build('any', ['msg' => 'Test message']);
+        $this->assertEquals('Test message', $compiled->getPayload()['text']);
+    }
+
+    public function testMessagesCanDefineComputedProperties() {
+        $router = $this->createSimpleRouter();
+        $msg = new MessageWithComputation($router);
+        $compiled = $msg->build('any', ['count' => 10]);
+        $this->assertEquals('I have 10 foos.', $compiled->getPayload()['text']);
+        $msg->foo = 'I have some foos.';
+        $compiled = $msg->build('any', ['count' => 10]);
+        $this->assertEquals('I have some foos.', $compiled->getPayload()['text']);
+    }
 }

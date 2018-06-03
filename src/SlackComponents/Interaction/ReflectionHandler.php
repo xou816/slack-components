@@ -21,7 +21,9 @@ abstract class ReflectionHandler {
 			if (is_null($interaction)) {
 				return null;
 			} else {
-	            $params = array_map(function(\ReflectionParameter $param) use ($payload, $interaction, $data) {
+				$params = $ref->getParameters();
+				$l = count($params);
+	            $params = array_map(function(\ReflectionParameter $param) use ($payload, $interaction, $data, $l) {
 	            	$clazz = $param->getClass();
 	            	$name = $param->getName();
 					if ($name === 'payload') {
@@ -35,10 +37,12 @@ abstract class ReflectionHandler {
 						return $user
 							->setId($payload['user']['id'])
 							->setUsername($payload['user']['name']);
+					} else if ($l === 1) {
+						return $payload;
 					} else {
 						return null;
 					}
-				}, $ref->getParameters());
+				}, $params);
 				return call_user_func_array($handler, $params);
 			}
         };

@@ -54,7 +54,10 @@ class ComponentTest extends SlackTestCase {
 	public function testComponentsRenderToPlainArrays() {
 		$comp = new TestableComponent([
 			new ArrayComponent([1, 2]),
-			true
+			true,
+			function() {
+				return new ArrayComponent([3, 4]);
+			}
 		]);
 		$comp->patchState();
 		$render = $comp->getRendered();
@@ -63,7 +66,8 @@ class ComponentTest extends SlackTestCase {
 		});
 		$this->assertEquals($render, [
 			[1, 2],
-			true
+			true,
+			[3, 4]
 		]);
 	}
 

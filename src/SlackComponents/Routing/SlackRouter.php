@@ -57,6 +57,8 @@ class SlackRouter {
 		$res = $this->handle($payload);
 		if (!is_null($res) && $res->getType() === SlackPayload::RESPONSE) {
 			return $res->getPayload();
+		} else {
+			return null;
 		}
 	}
 

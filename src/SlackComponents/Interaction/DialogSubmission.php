@@ -22,7 +22,7 @@ class DialogSubmission implements SlackInteraction {
         return $this->raw[$key];
     }
 
-    public function __set($key,$value) {
+    public function __set($key, $value) {
         $this->raw[$key] = $value;
     }
 

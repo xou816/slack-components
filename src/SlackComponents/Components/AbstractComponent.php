@@ -36,32 +36,46 @@ abstract class AbstractComponent {
         }
     }
 
+    private function patchChild($child, $old, $oldState, $patch, $canReuse) {
+        if (is_array($child)) $child = new ArrayComponent($child);
+        if (is_a($child, \Closure::class)) $child = new LazyComponent($child);
+        if (is_a($child, AbstractComponent::class)) {
+            $child->restoreState($old, $oldState);
+            $child->setContext($this->getContext());
+            if ($child->isInterestedIn($patch) || !$canReuse) {
+                return $child->patchState($patch);
+            } else {
+                return $old;
+            }
+        } else {
+            return $child;
+        }
+    }
+
     protected function patchState($patch) {
-        $newState = array_replace($this->getState(), $patch);
+        $oldState = $this->getState();
+        $newState = array_replace($oldState, $patch);
+        $this->state = $newState;
         $newRender = $this->buildTree($newState);
         $canReuse = !is_null($this->rendered);
         if (!$canReuse) {
             $patch = $newState;
         }
         if (is_array($newRender)) {
-            foreach ($newRender as $key => $new) {
-                $old = $canReuse && isset($this->rendered[$key]) ? $this->rendered[$key] : null;
-                if (is_array($new)) $new = new ArrayComponent($new);
-                if (is_a($new, \Closure::class)) $new = new LazyComponent($new);
-                if (is_a($new, AbstractComponent::class)) {
-                    $new->restoreState($old, $this->getState());
-                    $new->setContext($this->getContext());
-                    if ($new->isInterestedIn($patch) || !$canReuse) {
-                        $newRender[$key] = $new->patchState($patch);
-                    } else {
-                        $newRender[$key] = $old;
-                    }
-                } else {
-                    $newRender[$key] = $new;
-                }
-            }
+            $keys = array_keys($newRender);
+            $newChildren = array_map(function($key, $child) use ($oldState, $patch, $canReuse) {
+                $old = $canReuse && isset($this->rendered[$key]) ? 
+                    $this->rendered[$key] : null;
+                return $this->patchChild($child, $old, $oldState, $patch, $canReuse);
+            }, $keys, $newRender);
+            $newRender = array_combine($keys, $newChildren);
+            $newRender = array_filter($newRender, function($child) {
+                return !is_null($child);
+            });
+        } else {
+            $old = $canReuse ? $this->rendered : null;
+            $newRender = $this->patchChild($newRender, $old, $oldState, $patch, $canReuse);
         }
-        $this->state = $newState;
         $this->rendered = $newRender;
         return $this->rendered;
     }

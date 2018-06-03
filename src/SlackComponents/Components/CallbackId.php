@@ -26,10 +26,12 @@ class CallbackId extends StaticComponent {
 	}
 
 	public function getKey() {
-		$fromContext = is_null($this->getContext()) ? 
-			null : $this->getContext()->getCallbackKey();
-		return is_null($this->key) ?
-			 $fromContext : $this->key;
+		if (is_null($this->key)) {
+			return is_null($this->getContext()) ? 
+				null : $this->getContext()->getCallbackKey();
+		} else {
+			return $this->key;
+		}
 	}
 	
 	public function build() {

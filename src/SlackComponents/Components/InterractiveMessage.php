@@ -8,6 +8,8 @@ use SlackComponents\Routing\SlackRouter;
 
 abstract class InterractiveMessage extends AbstractComponent {
 
+	use ComputedProperties;
+
 	public static function slackLink($target, $name = null) {
 		return '<'.$target.(!is_null($name) ? '|'.$name : '').'>';
 	}
@@ -20,6 +22,10 @@ abstract class InterractiveMessage extends AbstractComponent {
 
 	public function __construct(SlackRouter $router) {
 		$this->router = $router;
+	}
+
+	public static function from(SlackRouter $router, \Closure $c) {
+		return new AnonymousMessage($router, $c);
 	}
 
 	public function getCallbackKey() {
@@ -79,11 +85,13 @@ abstract class InterractiveMessage extends AbstractComponent {
     }
 
 	protected function __buildMessage() {
-		return 'buildMessage';
+		$ref = new \ReflectionMethod($this, 'buildMessage');
+		$ref->setAccessible(true);
+		return $ref;
 	}
 
 	protected function buildTree($state) {
-		$ref = new \ReflectionMethod($this, $this->__buildMessage());
+		$ref = $this->__buildMessage();
 		$params = $ref->getParameters();
 		$l = count($params);
 		$params = array_map(function(\ReflectionParameter $param) use ($state, $l) {
@@ -94,7 +102,9 @@ abstract class InterractiveMessage extends AbstractComponent {
 				return $state;
 			}
 		}, $ref->getParameters()); 
-		return call_user_func_array([$this, $this->__buildMessage()], $params);
+		return is_a($ref, \ReflectionMethod::class) ?
+			$ref->invokeArgs($this, $params) :
+			$ref->invokeArgs($params);
     }
 
     protected function defaultState() {
@@ -108,4 +118,20 @@ abstract class InterractiveMessage extends AbstractComponent {
     protected function getContext() {
         return $this;
     }
+}
+
+class AnonymousMessage extends InterractiveMessage {
+
+	protected $builder;
+
+	public function __construct(SlackRouter $router, \Closure $c) {
+		parent::__construct($router);
+		$this->builder = $c;
+	}
+
+	protected function __buildMessage() {
+		$ref = new \ReflectionFunction($this->builder);
+		return $ref;
+	}
+
 }

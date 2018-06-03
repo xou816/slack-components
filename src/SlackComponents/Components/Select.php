@@ -53,7 +53,7 @@ class Select extends StaticComponent {
     }
 
     private function textOrLabel() {
-        if (is_null($this->getContext()) || get_class($this->getContext()) === Dialog::class) {
+        if (get_class($this->getContext()) === Dialog::class) {
             return 'label';
         } else {
             return 'text';
