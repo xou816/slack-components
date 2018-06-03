@@ -22,9 +22,12 @@ class SlackClient {
 	    } catch (RequestException $e) {
 	    	throw new SlackClientException('request_failed');
 	    }
-	    $body = json_decode($resp->getBody(), true);
-	    if (!$body['ok']) {
-	    	throw new SlackClientException($body['error']);
+	    $body = (string) $resp->getBody();
+	    if ($body != 'ok') {
+	    	$body = json_decode($body, true);
+	    	if (!$body['ok']) {
+	    		throw new SlackClientException($body['error']);
+	    	}
 	    }
 	}
 
