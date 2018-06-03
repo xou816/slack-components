@@ -69,7 +69,7 @@ abstract class InterractiveMessage extends AbstractComponent {
     	$callbackKey = is_null($callbackKey) ? $this->getCallbackKey() : $callbackKey;
         $this->router->when($callbackKey, function($payload) use ($handler, $callbackKey) {
 	        $resp = $this->createResponse($payload, $handler);
-	        if (!is_null($resp)) {
+	        if (!is_null($resp) && $resp->getType() === SlackPayload::RESPONSE) {
 	        	return $resp->withType(SlackPayload::RESPONSE_DEFER);
 	        } else {
 	        	return $resp;
