@@ -24,7 +24,7 @@ class Textarea extends StaticComponent {
     }
 
     public static function create($name) {
-        return new TextInput($name);
+        return new Textarea($name);
     }
 
     public function getName() {

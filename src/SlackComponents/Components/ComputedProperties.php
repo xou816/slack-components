@@ -11,7 +11,7 @@ trait ComputedProperties {
 		if (property_exists($this, $key) && isset($this->computers[$key])) {
 			$this->computed[$key] = $value;
 		} else if (is_a($value, \Closure::class)) {
-			$this->computers[$key] = $value;
+			$this->computers[$key] = $value->bindTo($this);
 		} else {
 			$this->$key = $value;
 		}
@@ -20,7 +20,8 @@ trait ComputedProperties {
 	public function __get($key) {
 		if (!isset($this->computed[$key])) {
 			$state = $this->getState();
-			$ref = new \ReflectionFunction($this->computers[$key]);
+			$closure = $this->computers[$key]->bindTo($this);
+			$ref = new \ReflectionFunction($closure);
 			$params = $ref->getParameters();
 			$l = count($params);
 			$params = array_map(function(\ReflectionParameter $param) use ($state, $l) {
@@ -31,7 +32,7 @@ trait ComputedProperties {
 					return $state;
 				}
 			}, $ref->getParameters());
-			$this->computed[$key] = $ref->invokeArgs($params); 
+			$this->computed[$key] = call_user_func_array($closure, $params); 
 		}
 		return $this->computed[$key];
 	}
