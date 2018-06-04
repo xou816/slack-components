@@ -57,28 +57,28 @@ class MessageWithComputation extends InterractiveMessage {
 
 class InterractiveMessageTest extends SlackTestCase {
 
-	public function testButtonsCanBeCreatedFluently() {
-		$btn = new Button('the_name', 'the_value');
-		$btn->withStyle(Style::PRIMARY)
-			->withLabel('the_text');
-		$this->assertEquals([
-			'type' => 'button',
+    public function testButtonsCanBeCreatedFluently() {
+        $btn = new Button('the_name', 'the_value');
+        $btn->withStyle(Style::PRIMARY)
+            ->withLabel('the_text');
+        $this->assertEquals([
+            'type' => 'button',
             'style' => 'primary',
             'value' => 'the_value',
             'name' => 'the_name',
             'text' => 'the_text'
         ], $btn->build());
-	}
+    }
 
-	public function testMessagesRegisterHandlers() {
-		$router = $this->createSimpleRouter();
-		$msg = new MyMessage($router);
-		$compiled = $msg->build('any', ['count' => 0]);
-		$this->assertEquals(0, $compiled->getPayload()['text']);
-		$payload = TestUtils::getPayload($compiled->getPayload(), 'btn', 'btn');
-		$resp = $router->handle($payload);
-		$this->assertEquals(4, $resp->getPayload()['text']);
-	}
+    public function testMessagesRegisterHandlers() {
+        $router = $this->createSimpleRouter();
+        $msg = new MyMessage($router);
+        $compiled = $msg->build('any', ['count' => 0]);
+        $this->assertEquals(0, $compiled->getPayload()['text']);
+        $payload = TestUtils::getPayload($compiled->getPayload(), 'btn', 'btn');
+        $resp = $router->handle($payload);
+        $this->assertEquals(4, $resp->getPayload()['text']);
+    }
 
     public function testAnonymousMessageCanBeCreated() {
         $router = $this->createSimpleRouter();

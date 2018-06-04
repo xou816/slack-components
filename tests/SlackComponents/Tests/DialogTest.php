@@ -60,15 +60,15 @@ class MyMessageWithDialog extends InterractiveMessage {
 
 class DialogMessageTest extends SlackTestCase {
 
-	public function testButtonsCanOpenDialog() {
-		$router = $this->createSimpleRouter();
-		$msg = new MyMessageWithDialog($router);
-		$compiled = $msg->build('some_channel', ['greet' => 'Hello']);
+    public function testButtonsCanOpenDialog() {
+        $router = $this->createSimpleRouter();
+        $msg = new MyMessageWithDialog($router);
+        $compiled = $msg->build('some_channel', ['greet' => 'Hello']);
         $payload = TestUtils::getPayload($compiled->getPayload(), 'btn', 'btn');
-		$resp = $router->handle($payload);
+        $resp = $router->handle($payload);
         $this->assertEquals(SlackPayload::DIALOG, $resp->getType());
         $this->assertEquals('Robert', $resp->getPayload()['elements'][0]['value']);
-	}
+    }
 
     public function testDialogsCanBeSubmitted() {
         global $myDialog;

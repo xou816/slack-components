@@ -4,18 +4,18 @@ namespace SlackComponents\Interaction;
 
 class DialogSubmission implements SlackInteraction {
     
-	private $raw;
+    private $raw;
 
-	public function __construct($raw) {
-		$this->raw = $raw;
-	}
+    public function __construct($raw) {
+        $this->raw = $raw;
+    }
 
     public function getRaw() {
-    	return $this->raw;
+        return $this->raw;
     }
 
     public function getType() {
-    	return SlackInteraction::DIALOG;
+        return SlackInteraction::DIALOG;
     }
 
     public function __get ($key) {

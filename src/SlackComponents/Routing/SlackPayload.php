@@ -4,10 +4,10 @@ namespace SlackComponents\Routing;
 
 class SlackPayload {
 
-	const WEBHOOK = 'webhook';
-	const RESPONSE = 'response_url';
+    const WEBHOOK = 'webhook';
+    const RESPONSE = 'response_url';
     const RESPONSE_DEFER = 'response_defer';
-	const DIALOG = 'trigger_id';
+    const DIALOG = 'trigger_id';
 
     private $type;
     private $details;

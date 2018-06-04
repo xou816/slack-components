@@ -8,104 +8,104 @@ use SlackComponents\Routing\SlackRouter;
 
 abstract class InterractiveMessage extends AbstractComponent {
 
-	use ComputedProperties;
+    use ComputedProperties;
 
-	public static function slackLink($target, $name = null) {
-		return '<'.$target.(!is_null($name) ? '|'.$name : '').'>';
-	}
+    public static function slackLink($target, $name = null) {
+        return '<'.$target.(!is_null($name) ? '|'.$name : '').'>';
+    }
 
-	public static function linkToMessage($payload, $display) {
-		return self::slackLink('https://'.$payload['team']['domain'].'.slack.com/archives/'.$payload['channel']['id'].'/'.'p'.str_replace('.', '', $payload['message_ts']), $display);
-	}
+    public static function linkToMessage($payload, $display) {
+        return self::slackLink('https://'.$payload['team']['domain'].'.slack.com/archives/'.$payload['channel']['id'].'/'.'p'.str_replace('.', '', $payload['message_ts']), $display);
+    }
 
-	private $router;
+    private $router;
 
-	public function __construct(SlackRouter $router) {
-		$this->router = $router;
-	}
+    public function __construct(SlackRouter $router) {
+        $this->router = $router;
+    }
 
-	public static function create(SlackRouter $router, \Closure $c) {
-		return new AnonymousMessage($router, $c);
-	}
+    public static function create(SlackRouter $router, \Closure $c) {
+        return new AnonymousMessage($router, $c);
+    }
 
-	public function getCallbackKey() {
-		return get_class($this);
-	}
+    public function getCallbackKey() {
+        return get_class($this);
+    }
 
-	public function build($channel, $data) {
-	    $res = $this->patchState($data);
-	    return SlackPayload::create(SlackPayload::WEBHOOK, $channel, $res);
-	}
+    public function build($channel, $data) {
+        $res = $this->patchState($data);
+        return SlackPayload::create(SlackPayload::WEBHOOK, $channel, $res);
+    }
 
-	public function send(SlackPayload $res) {
-	    return $this->router->send($res);
+    public function send(SlackPayload $res) {
+        return $this->router->send($res);
     }
 
     public function buildAndSend($channel, $args = null) {
-	    $this->router->send($this->build($channel, $args));
+        $this->router->send($this->build($channel, $args));
     }
 
     private function wrap(\Closure $handler) {
-    	return function($payload) use ($handler) {		
-	    	if (isset($payload['original_message'])) {
-		        $this->restoreState($payload['original_message'], $payload['callback_id']->getData());
-		    } else {
-		    	$this->restoreState(null, $payload['callback_id']->getData());
-		    }
-		    $resp = $handler($payload);
-		    if (is_null($resp)) {
-		    	return null;
-		    } else {
-		    	return is_a($resp, SlackPayload::class) ? $resp : 
-		    		SlackPayload::create(SlackPayload::RESPONSE, $payload['response_url'], $resp);
-		    }	    		
-    	};
+        return function($payload) use ($handler) {      
+            if (isset($payload['original_message'])) {
+                $this->restoreState($payload['original_message'], $payload['callback_id']->getData());
+            } else {
+                $this->restoreState(null, $payload['callback_id']->getData());
+            }
+            $resp = $handler($payload);
+            if (is_null($resp)) {
+                return null;
+            } else {
+                return is_a($resp, SlackPayload::class) ? $resp : 
+                    SlackPayload::create(SlackPayload::RESPONSE, $payload['response_url'], $resp);
+            }               
+        };
     }
 
     protected function callback($data) {
-    	return CallbackId::wrap($data)
-    		->withKey($this->getCallbackKey());
+        return CallbackId::wrap($data)
+            ->withKey($this->getCallbackKey());
     }
 
-	protected function when(\Closure $handler, $callbackKey = null) {
-		$callbackKey = is_null($callbackKey) ? $this->getCallbackKey() : $callbackKey;
-	    $wrapped = $this->wrap($handler);
-	    $this->router->when($callbackKey, $wrapped);
-	    return $this;
+    protected function when(\Closure $handler, $callbackKey = null) {
+        $callbackKey = is_null($callbackKey) ? $this->getCallbackKey() : $callbackKey;
+        $wrapped = $this->wrap($handler);
+        $this->router->when($callbackKey, $wrapped);
+        return $this;
     }
 
     protected function after(\Closure $handler, $callbackKey = null) {
-    	$callbackKey = is_null($callbackKey) ? $this->getCallbackKey() : $callbackKey;
-	    $wrapped = $this->wrap($handler);
-	    $this->router->when($callbackKey, $wrapped);
-	    return $this;
+        $callbackKey = is_null($callbackKey) ? $this->getCallbackKey() : $callbackKey;
+        $wrapped = $this->wrap($handler);
+        $this->router->when($callbackKey, $wrapped);
+        return $this;
     }
 
-	protected function __buildMessage() {
-		$ref = new \ReflectionMethod($this, 'buildMessage');
-		$ref->setAccessible(true);
-		return $ref;
-	}
+    protected function __buildMessage() {
+        $ref = new \ReflectionMethod($this, 'buildMessage');
+        $ref->setAccessible(true);
+        return $ref;
+    }
 
-	protected function buildTree($state) {
-		$ref = $this->__buildMessage();
-		$params = $ref->getParameters();
-		$l = count($params);
-		$params = array_map(function(\ReflectionParameter $param) use ($state, $l) {
-			$name = $param->getName();
-			if (isset($state[$name])) {
-				return $state[$name];
-			} else if ($l === 1) {
-				return $state;
-			}
-		}, $ref->getParameters()); 
-		return is_a($ref, \ReflectionMethod::class) ?
-			$ref->invokeArgs($this, $params) :
-			$ref->invokeArgs($params);
+    protected function buildTree($state) {
+        $ref = $this->__buildMessage();
+        $params = $ref->getParameters();
+        $l = count($params);
+        $params = array_map(function(\ReflectionParameter $param) use ($state, $l) {
+            $name = $param->getName();
+            if (isset($state[$name])) {
+                return $state[$name];
+            } else if ($l === 1) {
+                return $state;
+            }
+        }, $ref->getParameters()); 
+        return is_a($ref, \ReflectionMethod::class) ?
+            $ref->invokeArgs($this, $params) :
+            $ref->invokeArgs($params);
     }
 
     protected function defaultState() {
-	    return [];
+        return [];
     }
 
     protected function isInterestedIn($patch) {
@@ -119,16 +119,16 @@ abstract class InterractiveMessage extends AbstractComponent {
 
 class AnonymousMessage extends InterractiveMessage {
 
-	protected $builder;
+    protected $builder;
 
-	public function __construct(SlackRouter $router, \Closure $c) {
-		parent::__construct($router);
-		$this->builder = $c;
-	}
+    public function __construct(SlackRouter $router, \Closure $c) {
+        parent::__construct($router);
+        $this->builder = $c;
+    }
 
-	protected function __buildMessage() {
-		$ref = new \ReflectionFunction($this->builder);
-		return $ref;
-	}
+    protected function __buildMessage() {
+        $ref = new \ReflectionFunction($this->builder);
+        return $ref;
+    }
 
 }
