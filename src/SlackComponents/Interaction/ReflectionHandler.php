@@ -13,8 +13,17 @@ abstract class ReflectionHandler {
         return new SimpleActionHandler($name, $clazz);
     }
 
-    public function build(\Closure $handler) {
-        $ref = new \ReflectionFunction($handler);
+    private function getReflection(callable $handler) {
+        if (is_a($handler, \Closure::class)) {
+            return new \ReflectionFunction($handler);
+        } else {
+            list($that, $methodName) = $handler;
+            return new \ReflectionMethod($that, $methodName);
+        }
+    }
+
+    public function build(callable $handler) {
+        $ref = $this->getReflection($handler);
         return function($payload) use ($handler, $ref) {
             $data = $payload['callback_id']->getData();
             $interaction = $this->getInteraction($payload);

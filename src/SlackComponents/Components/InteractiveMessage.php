@@ -6,7 +6,7 @@ use SlackComponents\Routing\SlackPayload;
 use SlackComponents\Routing\SlackRouter;
 
 
-abstract class InterractiveMessage extends AbstractComponent {
+abstract class InteractiveMessage extends AbstractComponent {
 
     use ComputedProperties;
 
@@ -29,7 +29,7 @@ abstract class InterractiveMessage extends AbstractComponent {
     }
 
     public function getCallbackKey() {
-        return get_class($this);
+        return substr(sha1(get_class($this)), 0, 6);
     }
 
     public function build($channel, $data) {
@@ -67,14 +67,7 @@ abstract class InterractiveMessage extends AbstractComponent {
             ->withKey($this->getCallbackKey());
     }
 
-    protected function when(\Closure $handler, $callbackKey = null) {
-        $callbackKey = is_null($callbackKey) ? $this->getCallbackKey() : $callbackKey;
-        $wrapped = $this->wrap($handler);
-        $this->router->when($callbackKey, $wrapped);
-        return $this;
-    }
-
-    protected function after(\Closure $handler, $callbackKey = null) {
+    public function when(\Closure $handler, $callbackKey = null) {
         $callbackKey = is_null($callbackKey) ? $this->getCallbackKey() : $callbackKey;
         $wrapped = $this->wrap($handler);
         $this->router->when($callbackKey, $wrapped);
@@ -117,18 +110,32 @@ abstract class InterractiveMessage extends AbstractComponent {
     }
 }
 
-class AnonymousMessage extends InterractiveMessage {
+class AnonymousMessage extends InteractiveMessage {
 
     protected $builder;
+    protected $key = AnonymousMessage::class;
 
     public function __construct(SlackRouter $router, \Closure $c) {
         parent::__construct($router);
         $this->builder = $c;
     }
 
+    public function getCallbackKey() {
+        return $this->key;
+    }
+
+    public function withCallbackKey($key) {
+        $this->key = $key;
+        return $this;
+    }
+
     protected function __buildMessage() {
         $ref = new \ReflectionFunction($this->builder);
         return $ref;
+    }
+
+    public function patchState($patch) {
+        return parent::patchState($patch);
     }
 
 }

@@ -10,7 +10,7 @@ use SlackComponents\Components\Select;
 use SlackComponents\Components\CallbackId;
 use SlackComponents\Interaction\SlackInteraction;
 use SlackComponents\Interaction\DialogSubmission;
-use SlackComponents\Components\InterractiveMessage;
+use SlackComponents\Components\InteractiveMessage;
 use SlackComponents\Routing\SlackRouter;
 use SlackComponents\Routing\SlackPayload;
 use SlackComponents\Utils\TestUtils;
@@ -26,7 +26,10 @@ $myDialog = Dialog::create('Test dialog')
             ->withOption('opt1', 'Option 1')
     ]);
 
-class MyMessageWithDialog extends InterractiveMessage {
+class MyMessageWithDialog extends InteractiveMessage {
+
+    private $dialog;
+    private $button;
 
     public function __construct(SlackRouter $router) {
         global $myDialog;
@@ -34,7 +37,7 @@ class MyMessageWithDialog extends InterractiveMessage {
         $this->dialog = $myDialog;
         $this->button = new Button('btn');
         $this->when($this->button->clicked($this->dialog->doOpen()));
-        $this->after($this->dialog->submitted(function(DialogSubmission $sub, $greet) {
+        $this->when($this->dialog->submitted(function(DialogSubmission $sub, $greet) {
             return $greet.', '.$sub->name;
         }));
     }
@@ -71,7 +74,6 @@ class DialogMessageTest extends SlackTestCase {
     }
 
     public function testDialogsCanBeSubmitted() {
-        global $myDialog;
         $router = $this->createSimpleRouter();
         $msg = new MyMessageWithDialog($router);
         $compiled = $msg->build('some_channel', ['greet' => 'Hello']);

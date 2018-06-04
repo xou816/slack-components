@@ -6,15 +6,11 @@ use SlackComponents\Interaction\SlackInteraction;
 
 class TestUtils {
 
-    const USER = ['id' => 'ABC123', 'name' => 'user'];
-    const CHANNEL = ['id' => 'EDF456', 'name' => 'channel'];
-    const TEAM = ['id' => 'GHI789', 'domain' => 'domain'];
-
     public static function defaultPayload() {
         return [
-            'user' => TestUtils::USER,
-            'channel' => TestUtils::CHANNEL,
-            'team' => TestUtils::TEAM,
+            'user' => ['id' => 'ABC123', 'name' => 'user'],
+            'channel' => ['id' => 'EDF456', 'name' => 'channel'],
+            'team' => ['id' => 'GHI789', 'domain' => 'domain'],
             'action_ts' => strval(microtime(true) + 10),
             'response_url' => '',
             'actions' => [],
@@ -24,7 +20,7 @@ class TestUtils {
         ];
     }
 
-    public static function interractiveMessagePayload($message) {
+    public static function interactiveMessagePayload($message) {
         return array_replace(self::defaultPayload(), [
             'type' => SlackInteraction::MESSAGE,
             'original_message' => $message,
@@ -42,7 +38,7 @@ class TestUtils {
 
     public static function getPayload($message, $name = null, $value = null) {
 
-        $res = self::interractiveMessagePayload($message);
+        $res = self::interactiveMessagePayload($message);
 
         foreach ($message['attachments'] as $i => $attach) {
 

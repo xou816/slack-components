@@ -64,7 +64,6 @@ class SlackClient {
                 $this->sendJson($this->options['webhooks'][$payload->getDetails()], $payload->getPayload());
                 break;
             case SlackPayload::RESPONSE:
-            case SlackPayload::RESPONSE_DEFER:
                 $this->sendJson($payload->getDetails(), $payload->getPayload());
             default:
                 break;

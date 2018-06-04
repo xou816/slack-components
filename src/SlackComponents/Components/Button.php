@@ -7,10 +7,14 @@ use SlackComponents\Interaction\ButtonAction;
 
 class Button extends StaticComponent {
 
+    const DANGER = 'danger';
+    const DEF = 'default';
+    const PRIMARY = 'primary';
+
     private $value;
     private $name;
     private $text;
-    private $style = Style::DEF;
+    private $style = self::DEF;
     private $confirm = null;
     private $builder;
 
@@ -62,7 +66,7 @@ class Button extends StaticComponent {
         return $res;
     }
 
-    public function clicked(\Closure $handler) {
+    public function clicked(callable $handler) {
         return $this->builder->build($handler);
     }
 }

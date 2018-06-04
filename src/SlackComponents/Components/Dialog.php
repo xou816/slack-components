@@ -50,6 +50,11 @@ class Dialog extends AbstractComponent {
         return $this;
     }
 
+    public function withCallbackId(CallbackId $id) {
+        $this->callbackId = $id;
+        return $this;
+    }
+
     protected function getContext() {
         return $this;
     }
@@ -86,7 +91,7 @@ class Dialog extends AbstractComponent {
     }
 
     public function open($payload) {
-        $this->callbackId = CallbackId::read($payload['callback_id']);
+        $this->callbackId = $this->callbackId->merge(CallbackId::read($payload['callback_id']));
         $render = $this->patchState($this->callbackId->getData());
         return SlackPayload::create(SlackPayload::DIALOG, $payload['trigger_id'], $render);
     } 
@@ -97,7 +102,7 @@ class Dialog extends AbstractComponent {
         };
     }
 
-    public function submitted(\Closure $handler) {
+    public function submitted(callable $handler) {
         $builder = new DialogSubmissionBuilder();
         return $builder->build($handler);
     }

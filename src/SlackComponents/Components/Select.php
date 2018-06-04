@@ -9,7 +9,6 @@ class Select extends StaticComponent {
 
     private $name;
     private $text;
-    private $style = Style::DEF;
     private $options = [];
     private $builder;
 
@@ -28,7 +27,6 @@ class Select extends StaticComponent {
             'type' => 'select',
             'name' => $this->name,
             'text' => $this->text,
-            'style' =>  $this->style,
             'options' => array_map(function($el) {
                 return [
                     $this->textOrLabel() => $el['text'],
@@ -47,11 +45,6 @@ class Select extends StaticComponent {
         return $this;
     }
 
-    public function withStyle($style) {
-        $this->style = $style;
-        return $this;
-    }
-
     private function textOrLabel() {
         if (get_class($this->getContext()) === Dialog::class) {
             return 'label';
@@ -65,7 +58,7 @@ class Select extends StaticComponent {
         return $this;
     }
 
-    public function selected(\Closure $handler) {
+    public function selected(callable $handler) {
         return $this->builder->build($handler);
     }
 }

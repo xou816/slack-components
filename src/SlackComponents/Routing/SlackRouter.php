@@ -53,10 +53,6 @@ class SlackRouter {
         return $this;
     }
 
-    public function hookBeforeResponse($payload) {
-        return null;
-    }
-
     public function hookAfterResponse($payload) {
         $res = $this->handle($payload);
         if (!is_null($res)) {

@@ -35,9 +35,9 @@ class CallbackId extends StaticComponent {
     }
     
     public function build() {
-        $arr = ['key' => $this->getKey()];
+        $arr = ['k' => $this->getKey()];
         if (!is_null($this->data)) {
-            $arr['data'] = $this->data;
+            $arr['d'] = $this->data;
         }
         return base64_encode(json_encode($arr));
     }
@@ -50,7 +50,7 @@ class CallbackId extends StaticComponent {
         if (is_a($callbackId, CallbackId::class)) {
             return $callbackId;
         }
-        $default = ['key' => null, 'data' => []];
+        $default = ['k' => null, 'd' => []];
         $raw = [];
         try {
             $raw = array_replace($default, json_decode(base64_decode($callbackId), true));
@@ -59,8 +59,8 @@ class CallbackId extends StaticComponent {
         }
         $id = new CallbackId();
         return $id
-            ->withKey($raw['key'])
-            ->withData($raw['data']);
+            ->withKey($raw['k'])
+            ->withData($raw['d']);
     }
 
     public static function just($key) {
@@ -75,5 +75,12 @@ class CallbackId extends StaticComponent {
         return $id
             ->withData($data);
         }
+
+    public function merge(CallbackId $id) {
+        $prevData = is_null($this->data) ? [] : $this->data;
+        return $this
+            ->withKey($id->getKey())
+            ->withData(array_replace($prevData, $id->getData()));
+    }
 
 }

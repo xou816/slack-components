@@ -7,18 +7,22 @@ use SlackComponents\Components\Button;
 use SlackComponents\Interaction\ButtonAction;
 use SlackComponents\Components\Style;
 use SlackComponents\Components\CallbackId;
-use SlackComponents\Components\InterractiveMessage;
+use SlackComponents\Components\InteractiveMessage;
 use SlackComponents\Routing\SlackRouter;
 use SlackComponents\Utils\TestUtils;
 
-class MyMessage extends InterractiveMessage {
+class MyMessage extends InteractiveMessage {
+
+    private $button;
 
     public function __construct(SlackRouter $router) {
         parent::__construct($router);
         $this->button = new Button('btn');
-        $this->when($this->button->clicked(function($count) {
-            return $this->patchState(['count' => $count + 1]);
-        }));
+        $this->when($this->button->clicked([$this, 'handleClick']));
+    }
+
+    public function handleClick($count) {
+        return $this->patchState(['count' => $count + 1]);
     }
 
     protected function buildMessage($count) {
@@ -39,7 +43,7 @@ class MyMessage extends InterractiveMessage {
     }
 }
 
-class MessageWithComputation extends InterractiveMessage {
+class MessageWithComputation extends InteractiveMessage {
 
     public function __construct(SlackRouter $router) {
         parent::__construct($router);
@@ -55,7 +59,7 @@ class MessageWithComputation extends InterractiveMessage {
     }
 }
 
-class InterractiveMessageTest extends SlackTestCase {
+class InteractiveMessageTest extends SlackTestCase {
 
     public function testButtonsCanBeCreatedFluently() {
         $btn = new Button('the_name', 'the_value');
@@ -82,13 +86,32 @@ class InterractiveMessageTest extends SlackTestCase {
 
     public function testAnonymousMessageCanBeCreated() {
         $router = $this->createSimpleRouter();
-        $msg = InterractiveMessage::create($router, function($msg) {
+        $button = Button::create('inc');
+        $msg = InteractiveMessage::create($router, function($count) use ($button) {
             return [
-                'text' => $msg
+                'text' => $count,
+                'attachments' => [
+                    [
+                        'callback_id' => CallbackId::wrap([
+                            'count' => 2
+                        ]),
+                        'actions' => [
+                            $button->withLabel('Increment')
+                        ]
+                    ]
+                ]
             ];
         });
-        $compiled = $msg->build('any', ['msg' => 'Test message']);
-        $this->assertEquals('Test message', $compiled->getPayload()['text']);
+        $msg
+            ->withCallbackKey('anon')
+            ->when($button->clicked(function($count) use ($msg) {
+                return $msg->patchState(['count' => $count + 1]);
+            }));
+        $compiled = $msg->build('any', ['count' => 0]);
+        $this->assertEquals(0, $compiled->getPayload()['text']);
+        $payload = TestUtils::getPayload($compiled->getPayload(), 'inc', 'inc');
+        $resp = $router->handle($payload);
+        $this->assertEquals(3, $resp->getPayload()['text']);
     }
 
     public function testMessagesCanDefineComputedProperties() {
