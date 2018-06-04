@@ -49,6 +49,8 @@ abstract class InterractiveMessage extends AbstractComponent {
     	return function($payload) use ($handler) {		
 	    	if (isset($payload['original_message'])) {
 		        $this->restoreState($payload['original_message'], $payload['callback_id']->getData());
+		    } else {
+		    	$this->restoreState(null, $payload['callback_id']->getData());
 		    }
 		    $resp = $handler($payload);
 		    if (is_null($resp)) {
