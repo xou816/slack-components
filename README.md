@@ -23,7 +23,7 @@ This guide assumes you are somewhat familiar with [Slack interactive messages](h
 Creating a router
 -----------------
 
-The `SlackRouter` is responsible for handling incoming Slack interractions as well as dispatching your messages, dialogs, etc.
+The `SlackRouter` is responsible for handling incoming Slack interactions as well as dispatching your messages, dialogs, etc.
 
 ```php
 // $client is a GuzzleHttp\Client
@@ -35,7 +35,7 @@ Valid options:
 | Options   | Description |
 | --------- | ----------- |
 | webhooks  | An array mapping channel names to corresponding webhooks |
-| app_token | A token (`xoxp...`) thats grants your application permissions |
+| app_token | A token (`xoxp...`) that grants your application permissions |
 | token     | A token that is checked against the one coming from Slack when interacting |
 | safe      | Whether to check that the token coming from Slack is valid |
 
@@ -119,13 +119,13 @@ It can either be used to store the "full" state, when small enough...
 ['count' => 0]
 ```
 
-...or it can help to keep track of a larger reprensation of that state in a database.
+...or it can help to keep track of a larger representation of that state in a database.
 
 ```php
 ['state_id' => 123]
 ```
 
-The `CallbackId` component is a fairly simple component that results in a string when *built* (just like a good `callback_id` should be) -- a base 64 encoding of a key and some data:
+The `CallbackId` component is a fairly simple component that results in a string when *built* -- a base 64 encoding of a key and some data:
 
 ```php
 $callbackId
@@ -147,7 +147,7 @@ The root component can usually be accessed through the `getContext` method of co
 Why state matters
 -----------------
 
-Given a previous render of a component tree (such as the `original_message` sometimes provided by Slack) and a previous state (saved in our callback ID, remember?), we are able to efficiently rebuild the tree (read: our message)... but more on that later.
+Given a previous render of a component tree (such as the `original_message` sometimes provided by Slack) and a previous state (saved in our callback ID), we are able to efficiently rebuild the tree (read: our message)... but more on that later.
 
 Interactions
 ============
@@ -172,11 +172,19 @@ Reflection
 ----------
 
 Reflection is used in handlers just as the one supplied to `clicked`. You may therefore inject the following elements in such closures:
-- the interaction object, by requesting a `ButtonAction`, `DialogSubmission`...
+- the interaction object, by requesting a subclass of `SlackInteraction`, for instance, `ButtonAction`, `DialogSubmission`
 - the user responsible for the interaction, by requesting a `SlackUser`-typed argument
 - the full Slack payload, by requesting a single argument, or an argument named exactly `payload`
 - a state key, by requesting an argument with the exact same name.
 
+Instead of a closure, you may instead supply a callable.
+
+Responding to interactions
+--------------------------
+
+When responding to an interaction, you may return one of the following:
+- a message (built): for instance, using `patchState`, but it can also be a completely new message
+- a request to open a dialog (see dialogs), using `open` or `doOpen`.
 
 Interactive messages
 ====================
@@ -218,7 +226,7 @@ Things to note:
 - its content is described by `buildMessage`
 - we listen for interactions on our `increment` button using `when`
 - we store the state of the message using `callback`
-- when interacting, we patch our message with the new state.
+- when interacting, we patch our message, that is, we render it again with an updated state.
 
 You may also build a so-called anonymous message using `InteractiveMessage::create($router, $buildMesssageClosure)`. 
 
@@ -228,14 +236,18 @@ Building and sending
 Assuming you have an instance of your message class:
 
 ```php
-$built = $myMessage->build(['count' => 0]);
+$built = $myMessage->build('#channel', ['count' => 0]);
 $myMessage->send($built);
 // or...
-$myMessage->buildAndSend(['count' => 0]);
+$myMessage->buildAndSend('#channel', ['count' => 0]);
 ```
+
+The message will be sent to the specified channel using your webhooks.
 
 Patching messages
 -----------------
+
+Patching messages means updating the state with a patch (a subset of the new state). The `patchState` method returns a built message (a plain object).
 
 The `patchState` method is particularly helpful when using a `LazyComponent`. The latter is only rendered when needed -- if we have a previous render of it, and the relevant part of the state it *depends on* have not changed, we just keep the previous rendering.
 
@@ -292,7 +304,7 @@ class MyMessage extends InteractiveMessage {
 }
 ```
 
-In that exemple, the `actions` part of the message would only be computed once in ten clicks -- until the labels needs to be changed! Not convinced? Display the date in this button!
+In that example, the `actions` part of the message would only be computed once in ten clicks -- until the labels needs to be changed! Not convinced? Display the date in this button!
 
 Computed properties
 -------------------
@@ -352,7 +364,11 @@ $myDialog = Dialog::create('Test dialog')
             ->withOption('opt1', 'Option 1')
             ->withOption('opt2', 'Option 2')
     ]);
+```
 
+The dialog has no state on its own. However, when an interaction results in a dialog opening, that interaction carries a callback ID, and therefore a state. This state is communicated to dialog, and components are able to query it (that is precisely what the `LazyComponent`/closure does above).
+
+```php
 class MyMessageWithDialog extends InteractiveMessage {
 
     private $dialog;
@@ -388,3 +404,9 @@ class MyMessageWithDialog extends InteractiveMessage {
     }
 }
 ```
+
+In order to open a dialog, an interaction must first occur. You may then call one of the following methods:
+- `doOpen`, which returns an appropriate closure
+- or `open`, which you **must** give the full interaction `$payload`.
+
+Once open, the dialog can be used much like a button or a select, and you may react to submissions using `submitted`. 
