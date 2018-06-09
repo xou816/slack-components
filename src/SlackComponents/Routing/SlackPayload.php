@@ -7,6 +7,7 @@ class SlackPayload {
     const WEBHOOK = 'webhook';
     const RESPONSE = 'response_url';
     const DIALOG = 'trigger_id';
+    const POST = 'post';
 
     private $type;
     private $details;

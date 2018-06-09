@@ -16,12 +16,10 @@ class Button extends StaticComponent {
     private $text;
     private $style = self::DEF;
     private $confirm = null;
-    private $builder;
 
     public function __construct($name, $value = null) {
         $this->name = $name;
         $this->value = is_null($value) ? $name : $value;
-        $this->builder = ReflectionHandler::createSimple($name, ButtonAction::class);
     }
 
     public static function create($name) {
@@ -67,6 +65,14 @@ class Button extends StaticComponent {
     }
 
     public function clicked(callable $handler) {
-        return $this->builder->build($handler);
+        return function($payload) use ($handler) {
+            if (isset($payload['actions']) && count($payload['actions']) > 0) {
+                $action = $payload['actions'][0];
+                if (is_a($action, ButtonAction::class) && $action->getName() === $this->name) {
+                    return ReflectionHandler::call($handler, $payload);
+                }
+            }
+            return null;
+        };
     }
 }

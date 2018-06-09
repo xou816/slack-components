@@ -55,6 +55,21 @@ class SlackClient {
         $this->sendReq($req);
     }
 
+    private function postMessage($channel, $message) {
+        $args = [
+            'token' => $this->options['token'],
+            'channel' => $channel,
+            'text' => json_encode($message)
+        ];
+        $uri = Psr7\uri_for('https://slack.com/api/chat.postMessage');
+        $body = Psr7\stream_for(http_build_query($args));
+        $req = new Psr7\Request('POST', $uri);
+        $req = $req
+            ->withHeader('Content-Type', 'application/x-www-form-urlencoded')
+            ->withBody($body);
+        $this->sendReq($req);
+    }
+
     public function send(SlackPayload $payload) {
         switch ($payload->getType()) {
             case SlackPayload::DIALOG:
@@ -65,6 +80,8 @@ class SlackClient {
                 break;
             case SlackPayload::RESPONSE:
                 $this->sendJson($payload->getDetails(), $payload->getPayload());
+            case SlackPayload::POST:
+                $this->postMessage($payload->getDetails(), $payload->getPayload());
             default:
                 break;
         }

@@ -32,9 +32,9 @@ abstract class InteractiveMessage extends AbstractComponent {
         return substr(sha1(get_class($this)), 0, 6);
     }
 
-    public function build($channel, $data) {
+    public function build($channel, $data, $type = SlackPayload::WEBHOOK) {
         $res = $this->patchState($data);
-        return SlackPayload::create(SlackPayload::WEBHOOK, $channel, $res);
+        return SlackPayload::create($type, $channel, $res);
     }
 
     public function send(SlackPayload $res) {
@@ -45,20 +45,22 @@ abstract class InteractiveMessage extends AbstractComponent {
         $this->router->send($this->build($channel, $args));
     }
 
-    private function wrap(\Closure $handler) {
-        return function($payload) use ($handler) {      
-            if (isset($payload['original_message'])) {
-                $this->restoreState($payload['original_message'], $payload['callback_id']->getData());
+    private function wrap(\Closure $handler, $callbackKey) {
+        return function($payload) use ($callbackKey, $handler) {
+            if (is_a($payload['callback_id'], CallbackId::class)
+                && $payload['callback_id']->getKey() === $callbackKey) {
+                $original = isset($payload['original_message']) ? $payload['original_message'] : null;
+                $this->restoreState($original, $payload['callback_id']->getData());
+                $resp = $handler($payload);
+                if (is_null($resp)) {
+                    return null;
+                } else {
+                    return is_a($resp, SlackPayload::class) ? $resp :
+                        SlackPayload::create(SlackPayload::RESPONSE, $payload['response_url'], $resp);
+                }
             } else {
-                $this->restoreState(null, $payload['callback_id']->getData());
-            }
-            $resp = $handler($payload);
-            if (is_null($resp)) {
                 return null;
-            } else {
-                return is_a($resp, SlackPayload::class) ? $resp : 
-                    SlackPayload::create(SlackPayload::RESPONSE, $payload['response_url'], $resp);
-            }               
+            }
         };
     }
 
@@ -69,8 +71,8 @@ abstract class InteractiveMessage extends AbstractComponent {
 
     public function when(\Closure $handler, $callbackKey = null) {
         $callbackKey = is_null($callbackKey) ? $this->getCallbackKey() : $callbackKey;
-        $wrapped = $this->wrap($handler);
-        $this->router->when($callbackKey, $wrapped);
+        $wrapped = $this->wrap($handler, $callbackKey);
+        $this->router->pushHandler($wrapped);
         return $this;
     }
 
@@ -78,6 +80,11 @@ abstract class InteractiveMessage extends AbstractComponent {
         $ref = new \ReflectionMethod($this, 'buildMessage');
         $ref->setAccessible(true);
         return $ref;
+    }
+
+    protected function __callBuildMessage($params) {
+        $ref = $this->__buildMessage();
+        return $ref->invokeArgs($this, $params);
     }
 
     protected function buildTree($state) {
@@ -92,9 +99,7 @@ abstract class InteractiveMessage extends AbstractComponent {
                 return $state;
             }
         }, $ref->getParameters()); 
-        return is_a($ref, \ReflectionMethod::class) ?
-            $ref->invokeArgs($this, $params) :
-            $ref->invokeArgs($params);
+        return $this->__callBuildMessage($params);
     }
 
     protected function defaultState() {
@@ -132,6 +137,11 @@ class AnonymousMessage extends InteractiveMessage {
     protected function __buildMessage() {
         $ref = new \ReflectionFunction($this->builder);
         return $ref;
+    }
+
+    protected function __callBuildMessage($params) {
+        $ref = $this->__buildMessage();
+        return $ref->invokeArgs($params);
     }
 
     public function patchState($patch) {

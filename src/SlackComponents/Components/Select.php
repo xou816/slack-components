@@ -10,11 +10,9 @@ class Select extends StaticComponent {
     private $name;
     private $text;
     private $options = [];
-    private $builder;
 
     public function __construct($name) {
         $this->name = $name;
-        $this->builder = ReflectionHandler::createSimple($name, SelectAction::class);
     }
 
     public static function create($name) {
@@ -59,6 +57,14 @@ class Select extends StaticComponent {
     }
 
     public function selected(callable $handler) {
-        return $this->builder->build($handler);
+        return function($payload) use ($handler) {
+            if (isset($payload['actions']) && count($payload['actions']) > 0) {
+                $action = $payload['actions'][0];
+                if (is_a($action, SelectAction::class) && $action->getName() === $this->name) {
+                    return ReflectionHandler::call($handler, $payload);
+                }
+            }
+            return null;
+        };
     }
 }

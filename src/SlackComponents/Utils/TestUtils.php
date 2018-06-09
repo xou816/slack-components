@@ -13,7 +13,6 @@ class TestUtils {
             'team' => ['id' => 'GHI789', 'domain' => 'domain'],
             'action_ts' => strval(microtime(true) + 10),
             'response_url' => '',
-            'actions' => [],
             'callback_id' => '',
             'token' => 'default_token',
             'trigger_id' => 'trigger_id'

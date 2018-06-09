@@ -5,6 +5,7 @@ namespace SlackComponents\Tests;
 use PHPUnit\Framework\TestCase;
 use GuzzleHttp\Client; 
 use SlackComponents\Components\CallbackId;
+use SlackComponents\Routing\Middleware;
 use SlackComponents\Utils\ApiClient;
 use SlackComponents\Utils\TestUtils;
 use SlackComponents\Routing\SlackRouter;
@@ -12,9 +13,18 @@ use SlackComponents\Routing\SlackPayload;
 
 class SlackTestCase extends TestCase {
 
+    public function createBlankRouter() {
+        $mock = $this->createMock(Client::class);
+        return new SlackRouter($mock);
+    }
+
     public function createSimpleRouter($safe = false) {
-        $options = ['token' => 'slack_token', 'safe' => $safe];
-        return new SlackRouter($this->createMock(Client::class), $options);
+        $mock = $this->createMock(Client::class);
+        $router = new SlackRouter($mock);
+        if ($safe) $router->push($router->checkToken());
+        return $router->push(Middleware::parseCallbacks())
+            ->push(Middleware::parseUser())
+            ->push(Middleware::parseInteractions());
     }
 
     public function createSimpleMessage($text = 'Hello world') {
@@ -48,7 +58,7 @@ class SlackTestCase extends TestCase {
 
     public function trigger($key) {
         $payload = TestUtils::defaultPayload([]);
-        $payload['callback_id'] = CallbackId::just($key);
+        $payload['callback_id'] = $key;
         return $payload;
     }
 

@@ -8,17 +8,6 @@ use SlackComponents\Interaction\SlackInteraction;
 use SlackComponents\Interaction\ReflectionHandler;
 use SlackComponents\Interaction\DialogSubmission;
 
-class DialogSubmissionBuilder extends ReflectionHandler {
-
-    public function match($type, $sub) {
-        return $type === SlackInteraction::DIALOG;
-    }
-
-    public function map($sub) {
-        return new DialogSubmission($sub);
-    }
-}
-
 class Dialog extends AbstractComponent {
 
     private $elements;
@@ -103,7 +92,12 @@ class Dialog extends AbstractComponent {
     }
 
     public function submitted(callable $handler) {
-        $builder = new DialogSubmissionBuilder();
-        return $builder->build($handler);
+        return function($payload) use ($handler) {
+            if (isset($payload['submission']) && is_a($payload['submission'], DialogSubmission::class)) {
+                return ReflectionHandler::call($handler, $payload);
+            } else {
+                return null;
+            }
+        };
     }
 }

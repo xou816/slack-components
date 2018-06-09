@@ -156,7 +156,7 @@ Components offer a convenient way of registering interaction handlers in the rou
 
 ```php
 $router->when('key', function($payload) {
-    // ...
+    // if $payload matches a button press...
 });
 ```
 
@@ -184,7 +184,8 @@ Responding to interactions
 
 When responding to an interaction, you may return one of the following:
 - a message (built): for instance, using `patchState`, but it can also be a completely new message
-- a request to open a dialog (see dialogs), using `open` or `doOpen`.
+- a request to open a dialog (see dialogs), using `open` or `doOpen`
+- a message to the user who triggered the action with `SlackUser::sendMessage`.
 
 Interactive messages
 ====================

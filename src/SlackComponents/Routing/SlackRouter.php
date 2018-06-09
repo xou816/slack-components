@@ -3,53 +3,80 @@
 namespace SlackComponents\Routing;
 
 use GuzzleHttp\Client;
-use SlackComponents\Components\CallbackId;
 
 class SlackRouter {
 
     private $client;
     private $options;
+    private $middlewares = [];
     private $handlers = [];
 
     public function __construct(Client $client, $options = []) {
         $options = array_replace([
-            'safe' => true,
+            'token' => 'INVALID_TOKEN',
             'app_token' => 'INVALID_TOKEN'
         ], $options);
         $this->client = new SlackClient($client, $options);
         $this->options = $options;
     }
 
-    public function handle($payload, $safe = true) {
-        if ($this->options['safe'] && $safe && $payload['token'] != $this->options['token']) {
-            throw new SlackRouterException('Token mismatch');
-        } else {
-            try {
-                $id = CallbackId::read($payload['callback_id']);
-                $payload['callback_id'] = $id;
-                return isset($this->handlers[$id->getKey()]) ?
-                    $this->handlers[$id->getKey()]($payload) :
-                    null;
-            } catch (\Exception $e) {
+    public static function defaults(Client $client, $options = []) {
+        $router = new SlackRouter($client, $options);
+        return $router
+            ->push($router->checkToken())
+            ->push(Middleware::parseCallbacks())
+            ->push(Middleware::parseInteractions())
+            ->push(Middleware::parseUser());
+    }
+
+    public function checkToken() {
+        return function($payload, $next) {
+            if ($payload['token'] != $this->options['token']) {
+                throw new SlackRouterException('Token mismatch');
+            } else {
+                return $next($payload);
+            }
+        };
+    }
+
+    private function next($funs) {
+        return function($payload) use ($funs) {
+            if (count($funs) > 0) {
+                $fun = array_shift($funs);
+                return $fun($payload, $this->next($funs));
+            } else {
                 return null;
             }
-        }
+        };
     }
 
-    private function mergeHandler($callbackKey, $next) {
-        if (isset($this->handlers[$callbackKey])) {
-            $curr = $this->handlers[$callbackKey];
-            return function($payload) use ($curr, $next) {
-                $res = $curr($payload);
-                return !is_null($res) ? $res : $next($payload);
-            };
-        } else {
-            return $next;
-        }
+    public function pushHandler(\Closure $fun) {
+        $this->handlers[] = function($payload, $next) use ($fun) {
+            $res = $fun($payload);
+            return is_null($res) ? $next($payload) : $res;
+        };
+        return $this;
     }
 
-    public function when($callbackKey, \Closure $handler) {
-        $this->handlers[$callbackKey] = $this->mergeHandler($callbackKey, $handler);
+    public function push($middleware) {
+        $this->middlewares[] = $middleware;
+        return $this;
+    }
+
+    public function handle($payload) {
+        $next = $this->next(array_merge($this->middlewares, $this->handlers));
+        return $next($payload);
+    }
+
+    public function when($callback, \Closure $handler) {
+        $this->handlers[] = function($payload, $next) use ($handler, $callback) {
+            if ($payload['callback_id'] === $callback) {
+                $res = $handler($payload);
+                return is_null($res) ? $next($payload) : $res;
+            } else {
+                return $next($payload);
+            }
+        };
         return $this;
     }
 

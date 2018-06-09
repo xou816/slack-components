@@ -3,13 +3,14 @@
 namespace SlackComponents\Tests;
 
 use SlackComponents\Routing\SlackClient;
+use SlackComponents\Routing\SlackRouter;
 use SlackComponents\Routing\SlackRouterException;
 use SlackComponents\Routing\SlackPayload;
 
 class SlackRouterTest extends SlackTestCase {
 
     public function testHandlersCanBeRegistered() {
-        $router = $this->createSimpleRouter();
+        $router = $this->createBlankRouter();
         $message = $this->createSimpleMessage();
         $router->when('callback', $this->respondWith($message));
         $resp = $router->handle($this->trigger('callback'));
@@ -17,7 +18,7 @@ class SlackRouterTest extends SlackTestCase {
     }
 
     public function testFirstNonNullHandlerIsUsed() {
-        $router = $this->createSimpleRouter();
+        $router = $this->createBlankRouter();
         $one = null;
         $two = $this->createSimpleMessage('Message #2');
         $three = $this->createSimpleMessage('Message #3');
@@ -30,13 +31,14 @@ class SlackRouterTest extends SlackTestCase {
     }
 
     public function testTokenIsVerified() {
-        $router = $this->createSimpleRouter(true);
+        $router = $this->createBlankRouter();
+        $router->push($router->checkToken());
         $this->expectException(SlackRouterException::class);
         $router->handle($this->trigger('any'));
     }
 
     public function testOnlyTheRelevantHandlerResponds() {
-        $router = $this->createSimpleRouter();
+        $router = $this->createBlankRouter();
         $callback_a = $this->createSimpleMessage('Message for callback_a');
         $callback_b = $this->createSimpleMessage('Message for callback_b');
         $router

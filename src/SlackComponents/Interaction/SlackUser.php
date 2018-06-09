@@ -1,6 +1,8 @@
 <?php
 
-namespace SlackComponents\Utils;
+namespace SlackComponents\Interaction;
+
+use SlackComponents\Routing\SlackPayload;
 
 class SlackUser {
 
@@ -27,5 +29,9 @@ class SlackUser {
 
     public function getMention() {
         return '<@'.$this->getId().'>';
+    }
+
+    public function sendMessage($message) {
+        return SlackPayload::create(SlackPayload::POST, $this->getId(), $message);
     }
 }
