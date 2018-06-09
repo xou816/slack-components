@@ -80,8 +80,10 @@ class SlackClient {
                 break;
             case SlackPayload::RESPONSE:
                 $this->sendJson($payload->getDetails(), $payload->getPayload());
+                break;
             case SlackPayload::POST:
                 $this->postMessage($payload->getDetails(), $payload->getPayload());
+                break;
             default:
                 break;
         }
