@@ -22,9 +22,11 @@ class SlackTestCase extends TestCase {
         $mock = $this->createMock(Client::class);
         $router = new SlackRouter($mock);
         if ($safe) $router->push($router->checkToken());
-        return $router->push(Middleware::parseCallbacks())
+        return $router
+            ->push(Middleware::parseCallbacks())
+            ->push(Middleware::parseInteractions())
             ->push(Middleware::parseUser())
-            ->push(Middleware::parseInteractions());
+            ->push(Middleware::wrapResponse());
     }
 
     public function createSimpleMessage($text = 'Hello world') {

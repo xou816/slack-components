@@ -26,7 +26,8 @@ class SlackRouter {
             ->push($router->checkToken())
             ->push(Middleware::parseCallbacks())
             ->push(Middleware::parseInteractions())
-            ->push(Middleware::parseUser());
+            ->push(Middleware::parseUser())
+            ->push(Middleware::wrapResponse());
     }
 
     public function checkToken() {

@@ -8,6 +8,7 @@ use SlackComponents\Interaction\DialogSubmission;
 use SlackComponents\Interaction\SelectAction;
 use SlackComponents\Interaction\SlackInteraction;
 use SlackComponents\Interaction\SlackUser;
+use SlackComponents\Routing\SlackPayload;
 
 class Middleware {
 
@@ -44,6 +45,15 @@ class Middleware {
                 ->setId($payload['user']['id'])
                 ->setUsername($payload['user']['name']);
             return $next($payload);
+        };
+    }
+
+    public static function wrapResponse() {
+        return function($payload, $next) {
+            $resp = $next($payload);
+            return !is_a($resp, SlackPayload::class) && isset($payload['response_url']) ? 
+                SlackPayload::create(SlackPayload::RESPONSE, $payload['response_url'], $resp) :
+                $resp;
         };
     }
 

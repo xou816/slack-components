@@ -51,13 +51,7 @@ abstract class InteractiveMessage extends AbstractComponent {
                 && $payload['callback_id']->getKey() === $callbackKey) {
                 $original = isset($payload['original_message']) ? $payload['original_message'] : null;
                 $this->restoreState($original, $payload['callback_id']->getData());
-                $resp = $handler($payload);
-                if (is_null($resp)) {
-                    return null;
-                } else {
-                    return is_a($resp, SlackPayload::class) ? $resp :
-                        SlackPayload::create(SlackPayload::RESPONSE, $payload['response_url'], $resp);
-                }
+                return $handler($payload);
             } else {
                 return null;
             }
