@@ -37,7 +37,13 @@ Valid options:
 | webhooks  | An array mapping channel names to corresponding webhooks |
 | app_token | A token (`xoxp...`) that grants your application permissions |
 | token     | A token that is checked against the one coming from Slack when interacting |
-| safe      | Whether to check that the token coming from Slack is valid |
+
+Alternatively, you may build a router with the default middlewares enabled:
+
+```php
+// $client is still a GuzzleHttp\Client
+$router = SlackRouter::defaults($client, $options); 
+```
 
 Request URL
 -----------
@@ -51,7 +57,37 @@ $payload = json_decode($request->request->get('payload'), true);
 $router->hookAfterResponse($payload);
 ``` 
 
-Validation of the payload is performed by `hookAfterResponse`.
+This hook is responsible for sending responses to Slack interactions.
+
+Middlewares
+-----------
+
+Middlewares are functions which can alter the incoming Slack action payload before it is handled:
+
+```php
+$router->push(function($payload, $next) {
+    $modified = modify($payload);
+    return $next($modified);
+});
+``` 
+
+Or modify the response that is sent:
+
+```php
+$router->push(function($payload, $next) {
+    $response = $next($payload);
+    return modify($response);    
+});
+``` 
+
+Default middlewares:
+- `$router->checkToken()`: validates the payload token, you must have an instance of a router to use that middleware, and it should be the first one in the stack
+- `Middleware::parseCallbacks()`: replaces raw callback IDs with `CallbackId` components
+- `Middleware::parseInteractions()`: replaces interactions with their corresponding `SlackInteraction` object
+- `Middleware::parseUser()`: replaces the payload user with a `SlackUser` object
+- `Middleware::wrapResponse()`: wraps plain object in proper `SlackResponse` objects (uses the `response_url` by default).
+
+Other middlewares could be written to handle authorization, logging, etc.
 
 Send a message
 --------------
@@ -64,6 +100,18 @@ $router->send($msg);
 ```
 
 Fortunately, interactive messages save you the trouble of having to build the `SlackPayload` yourself, thanks to smart components.
+
+Interactions
+------------
+
+Use the `when` method to register a handler that is triggered by a specific callback ID. A callback ID is often attached to actions in messages you send.
+
+```php
+$router->when('callback', function($payload) {
+    // if $payload matches a button press...
+});
+```
+
 
 Components
 ==========
@@ -99,7 +147,7 @@ You might end up writing this:
         [
             'callback_id' => CallbackId::wrap(['count' => 0]),
             'actions' => [
-                $button->withLabel('Increment')
+                Button::create('btn_name')->withLabel('Increment')
             ]
         ]
     ]
@@ -135,6 +183,8 @@ $callbackId
 
 The **key** identifies where the message comes from (and what will be able to handle future interactions), while the **data** can be used to store state.
 
+You **must** use the `parseCallbacks` middleware if you want to work with incoming callback IDs in such a way.
+
 Building components
 -------------------
 
@@ -150,23 +200,17 @@ Why state matters
 Given a previous render of a component tree (such as the `original_message` sometimes provided by Slack) and a previous state (saved in our callback ID), we are able to efficiently rebuild the tree (read: our message)... but more on that later.
 
 Interactions
-============
+------------
 
-Components offer a convenient way of registering interaction handlers in the router. This:
-
-```php
-$router->when('key', function($payload) {
-    // if $payload matches a button press...
-});
-```
-
-Becomes this:
+Components offer a convenient way of registering interaction handlers in the router. For instance, with the `parseInteractions` middleware enabled:
 
 ```php
-$router->when('key', $button->clicked(function(ButtonAction $action) {
+$router->when('callback', $button->clicked(function(ButtonAction $action) {
     // ...
 }));
 ```
+
+This handler will fire for the specified callback, when the button represented by the `$button` instance has been clicked.
 
 Reflection
 ----------
@@ -183,8 +227,8 @@ Responding to interactions
 --------------------------
 
 When responding to an interaction, you may return one of the following:
-- a message (built): for instance, using `patchState`, but it can also be a completely new message
-- a request to open a dialog (see dialogs), using `open` or `doOpen`
+- a message (built): for instance, using `InteractiveMessage::patchState`, but it can also be a completely new message
+- a request to open a dialog (see dialogs), using `Dialog::open` or `Dialog::doOpen`
 - a message to the user who triggered the action with `SlackUser::sendMessage`.
 
 Interactive messages
@@ -231,6 +275,8 @@ Things to note:
 
 You may also build a so-called anonymous message using `InteractiveMessage::create($router, $buildMesssageClosure)`. 
 
+A callback key is automatically chosen for you, based on the message class. That's why you do not have to supply one to the message's `when` method.
+
 Building and sending
 --------------------
 
@@ -244,6 +290,8 @@ $myMessage->buildAndSend('#channel', ['count' => 0]);
 ```
 
 The message will be sent to the specified channel using your webhooks.
+
+The `send` method takes any `SlackPayload` object.
 
 Patching messages
 -----------------
@@ -345,7 +393,8 @@ Troubleshooting
 Usual components
 ================
 
-In a message: `Button`, `Select`.
+In a message: `Button`, `Select`. You may attach (reflection-ready) handlers to these components using `clicked` and `selected` respectively.
+
 In a dialog: `TextInput`, `Textarea`, `Select`.
 
 Dialogs
@@ -367,7 +416,7 @@ $myDialog = Dialog::create('Test dialog')
     ]);
 ```
 
-The dialog has no state on its own. However, when an interaction results in a dialog opening, that interaction carries a callback ID, and therefore a state. This state is communicated to dialog, and components are able to query it (that is precisely what the `LazyComponent`/closure does above).
+The dialog has no state on its own, when you first create it, and is not attached to the message body like a button would. However, when an interaction results in a dialog opening, that interaction carries a callback ID, and therefore a state. This state is communicated to dialog, and components are able to query it (that is precisely what the `LazyComponent`/closure does above).
 
 ```php
 class MyMessageWithDialog extends InteractiveMessage {
@@ -393,7 +442,7 @@ class MyMessageWithDialog extends InteractiveMessage {
                 [
                     'callback_id' => $this->callback([
                         'greet' => $greet,
-                        'default' => 'Robert'
+                        'default' => 'Robert' // this part is communcated to the dialog
                     ]),
                     'actions' => [
                         $this->button
